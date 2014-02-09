@@ -63,6 +63,9 @@ class InvertedIndex(object):
         # Returns the frequency of the term between the
         # start and end positions (inclusive)
 
+        if term not in self.__postings:
+            return 0
+
         istart = self.__inext(term, start - 1)
         iend   = self.__iprev(term, end + 1)
 
@@ -87,11 +90,12 @@ class InvertedIndex(object):
                 reverse = val
             else:
                 raise ValueError()
-            
-        # WARNING, Not tested
-        #
 
         # Will return an iterator over the term's postings list
+
+        if term not in self.__postings:
+            return [].__iter__()
+            
         if reverse:
             if start is None:
                 start = INF
