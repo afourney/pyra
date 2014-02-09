@@ -40,10 +40,10 @@ class GCL(object):
         raise NotImplementedError()
 
     def BoundedBy( self, a, b ):
-        return BoundedByGenerator(self.__idx, a, b)
+        return BoundedByOperator(self.__idx, a, b)
 
     def Containing( self, a, b ):
-        return ContainingGenerator(self.__idx, a, b)
+        return ContainingByOperator(self.__idx, a, b)
 
     def ContainedIn( self, a, b ):
         raise NotImplementedError()
@@ -271,11 +271,11 @@ class PhraseGenerator(GCListGenerator):
             return self.__prev_phrase(tokens, u)
 
 
-class BoundedByGenerator(GCListGenerator):
+class BoundedByOperator(GCListGenerator):
 
 
     def __init__(self, inverted_index, a, b):
-        super(BoundedByGenerator, self).__init__(inverted_index)
+        super(BoundedByOperator, self).__init__(inverted_index)
         self.__a = a
         self.__b = b
 
@@ -328,10 +328,10 @@ class BoundedByGenerator(GCListGenerator):
         raise NotImplementedError()
 
 
-class ContainingGenerator(GCListGenerator):
+class ContainingByOperator(GCListGenerator):
 
     def __init__(self, inverted_index, a, b):
-        super(ContainingGenerator, self).__init__(inverted_index)
+        super(ContainingByOperator, self).__init__(inverted_index)
         self.__a = a
         self.__b = b
 
