@@ -31,6 +31,6 @@ class TestInvertedIndex(unittest.TestCase):
         self.assertEqual(iidx.frequency('dog', 12, INF),               1)
         self.assertEqual(iidx.frequency('dog', 13, 14),                0)
         self.assertEqual(list(iidx.postings('dog')),                   [8, 12])
-#        self.assertEqual(list(iidx.postings('dog', reverse=True)),     [12,8])
+        self.assertEqual(list(iidx.postings('dog', reverse=True)),     [12,8])
         self.assertEqual(list(iidx.postings('dog', 12)),               [12])
         self.assertEqual(iidx.dictionary() ^ set(tokens),                   set())
