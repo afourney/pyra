@@ -1,4 +1,5 @@
 from .util import galloping_search
+from itertools import islice
 
 INF = float('inf')
 
@@ -29,66 +30,20 @@ class InvertedIndex(object):
 
     def next(self, term, position):
 
-        if term not in self.__postings:
-            return INF
-
-        plist = self.__postings[term]
-
-        if position >= plist[-1]:
-            return INF
-
-        if position < plist[0]:
-            return plist[0]
-
-        # Reset the cache if our assumption of a 
-        # forward scan is viloated
-        if (self.__next_cache[term] > 0 and 
-            plist[self.__next_cache[term]] > position):
-           self.__next_cache[term] = 0
-
-        i = galloping_search(plist, position, self.__next_cache[term]) 
-
-        # position is in the list, at position i
-        if plist[i] == position:
-            self.__next_cache[term] = i+1
-            return plist[i+1]
-        # position not in list, and all positions from i to end
-        # are larger
-        else: 
-            self.__next_cache[term] = i
-            return plist[i]
+        i = self.__inext(term, position)
+        if abs(i) == INF:
+            return i
+        else:
+            return self.__postings[term][i]
 
 
     def prev(self, term, position):
 
-        if term not in self.__postings:
-            return -INF
-
-        plist = self.__postings[term]
-
-        if position <= plist[0]:
-            return -INF
-
-        if position > plist[-1]:
-            return plist[-1]
-
-        # Reset the cache if our assumption of a 
-        # backward scan is viloated
-        if (self.__prev_cache[term] < len(plist)-1 and
-            plist[self.__prev_cache[term]] < position):
-           self.__prev_cache[term] = len(plist)-1
-
-        i = galloping_search(plist, position, self.__prev_cache[term]) 
-
-        # position is in the list, at position i
-        if plist[i] == position:
-            self.__prev_cache[term] = i-1
-            return plist[i-1]
-        # position not in list, and all positions from i to end
-        # are larger
+        i = self.__iprev(term, position)
+        if abs(i) == INF:
+            return i
         else:
-            self.__prev_cache[term] = i-1
-            return plist[i-1]
+            return self.__postings[term][i]
 
 
     #
@@ -105,16 +60,26 @@ class InvertedIndex(object):
 
 
     def frequency(self, term, start=-INF, end=-INF):
-        # Will return the frequency of the term between the
+        # Returns the frequency of the term between the
         # start and end positions (inclusive)
 
-        # This can be done more efficiently than iterating over 
-        # the postings list by subtracting indices of the
-        # start and end positions in the posting list
-        raise NotImplementedError()
+        istart = self.__inext(term, start - 1)
+        iend   = self.__iprev(term, end + 1)
+
+        if istart == INF:
+            return 0
+        elif istart == -INF:
+            istart = 0
+         
+        if iend == -INF:
+            return 0
+        elif iend == INF:
+            iend = len(self.__postings[term]) - 1
+
+        return iend - istart + 1
 
 
-    def postings(self, term, start=-INF, **args):
+    def postings(self, term, start=None, **args):
 
         reverse = False
         for arg,val in args.items():
@@ -122,9 +87,29 @@ class InvertedIndex(object):
                 reverse = val
             else:
                 raise ValueError()
+            
+        # WARNING, Not tested
+        #
 
         # Will return an iterator over the term's postings list
-        raise NotImplementedError()
+        if reverse:
+            if start is None:
+                start = INF
+
+            istart = self.__inext(term, start-1)
+            if abs(istart) == INF:
+                return islice([], None, None)
+            else:
+                return islice(self.__postings[term], istart, None)
+        else:
+            if start is None:
+                start = -INF
+
+            istop = self.__iprev(term, start+1)
+            if abs(istop) == INF:
+                return islice([], None, None)
+            else:
+                return islice(self.__postings[term], None, istop, -1)
 
 
     def dictionary(self):
@@ -137,3 +122,67 @@ class InvertedIndex(object):
 
     def __iter__(self):
         return self.dictionary().__iter__()
+
+
+    def __inext(self, term, position):
+
+        if term not in self.__postings:
+            return INF
+
+        plist = self.__postings[term]
+
+        if position >= plist[-1]:
+            return INF
+
+        if position < plist[0]:
+            return 0
+
+        # Reset the cache if our assumption of a 
+        # forward scan is viloated
+        if (self.__next_cache[term] > 0 and 
+            plist[self.__next_cache[term]] > position):
+           self.__next_cache[term] = 0
+
+        i = galloping_search(plist, position, self.__next_cache[term]) 
+
+        # position is in the list, at position i
+        if plist[i] == position:
+            self.__next_cache[term] = i+1
+            return i+1
+        # position not in list, and all positions from i to end
+        # are larger
+        else: 
+            self.__next_cache[term] = i
+            return i
+
+
+    def __iprev(self, term, position):
+
+        if term not in self.__postings:
+            return -INF
+
+        plist = self.__postings[term]
+
+        if position <= plist[0]:
+            return -INF
+
+        if position > plist[-1]:
+            return len(plist)-1
+
+        # Reset the cache if our assumption of a 
+        # backward scan is viloated
+        if (self.__prev_cache[term] < len(plist)-1 and
+            plist[self.__prev_cache[term]] < position):
+           self.__prev_cache[term] = len(plist)-1
+
+        i = galloping_search(plist, position, self.__prev_cache[term]) 
+
+        # position is in the list, at position i
+        if plist[i] == position:
+            self.__prev_cache[term] = i-1
+            return i-1
+        # position not in list, and all positions from i to end
+        # are larger
+        else:
+            self.__prev_cache[term] = i-1
+            return i-1
