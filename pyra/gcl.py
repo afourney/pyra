@@ -78,13 +78,26 @@ class GCListGenerator(object):
     def inverted_index(self):
         return self.__idx
 
-    def iterator(self, k=0):
-        return GCListGenerator._forward_iterator(self, k)
 
-    def reverse(self, k=None):
-        if k is None:
-            k = self.__idx.corpus_length()-1
-        return GCListGenerator._reverse_iterator(self, k)
+    def iterator(self, k=None, **args):
+
+        reverse = False
+        
+        for arg,val in args.items():
+            if arg == "reverse":
+                reverse = val
+            else:
+                raise ValueError()
+
+        if reverse:
+            if k is None:
+                k = self.__idx.corpus_length()-1
+            return GCListGenerator._reverse_iterator(self, k)
+        else:
+            if k is None:
+                k = 0
+            return GCListGenerator._forward_iterator(self, k)
+
 
     def _first_starting_at_or_after(self, k):
         raise NotImplementedError()
@@ -109,7 +122,7 @@ class GCListGenerator(object):
             return self
 
         def __next__(self):
-            self.next()
+            return self.next()
 
         def next(self):
             if self.__k == INF:
@@ -135,7 +148,7 @@ class GCListGenerator(object):
             return self
 
         def __next__(self):
-            self.next()
+            return self.next()
 
         def next(self):
             if self.__k < 0:

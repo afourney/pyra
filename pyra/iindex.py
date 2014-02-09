@@ -1,4 +1,4 @@
-from util import galloping_search
+from .util import galloping_search
 
 INF = float('inf')
 
@@ -117,7 +117,7 @@ class InvertedIndex(object):
     def postings(self, term, start=-INF, **args):
 
         reverse = False
-        for arg,val in args.iteritems():
+        for arg,val in args.items():
             if arg == "reverse":
                 reverse = val
             else:
