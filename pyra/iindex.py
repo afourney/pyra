@@ -96,20 +96,21 @@ class InvertedIndex(object):
             if start is None:
                 start = INF
 
+            istart = self.__iprev(term, start+1)
+            if abs(istart) == -INF:
+                return islice([], None, None)
+            else:
+                raise NotImplementedError()
+                #return islice(self.__postings[term], istart, len(self.__postings[term])-1, -1)
+        else:
+            if start is None:
+                start = -INF
+
             istart = self.__inext(term, start-1)
             if abs(istart) == INF:
                 return islice([], None, None)
             else:
                 return islice(self.__postings[term], istart, None)
-        else:
-            if start is None:
-                start = -INF
-
-            istop = self.__iprev(term, start+1)
-            if abs(istop) == INF:
-                return islice([], None, None)
-            else:
-                return islice(self.__postings[term], None, istop, -1)
 
 
     def dictionary(self):
