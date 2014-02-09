@@ -104,55 +104,36 @@ class InvertedIndex(object):
         return self.prev(term, INF)
 
 
-    def postings(self, term, start_position, end_position):
-        # TODO: Make start and end consistent with the extents used / returned 
-        #       by the query algebra.
+    def frequency(self, term, start=-INF, end=-INF):
+        # Will return the frequency of the term between the
+        # start and end positions (inclusive)
 
-        if term not in self.__postings:
-            return []
-
-        if start_position < 0:
-            start_position = 0
-        else:
-            start_position = int(start_position)
-
-        if end_position >= self.corpus_length():
-            end_position = self.corpus_length() - 1
-        else:
-            end_position = int(end_position)
-
-        results = []
-        for p in self.__postings[term]:
-            if start_position <= p and p <= end_position:
-                results.append(p)
-        return results
+        # This can be done more efficiently than iterating over 
+        # the postings list by subtracting indices of the
+        # start and end positions in the posting list
+        raise NotImplementedError()
 
 
-    def postings_count(self, term, start_position, end_position):
-        # TODO: Make start and end consistent with the extents used / returned 
-        #       by the query algebra.
+    def postings(self, term, start=-INF, **args):
 
-        count = 0
+        reverse = False
+        for arg,val in args.iteritems():
+            if arg == "reverse":
+                reverse = val
+            else:
+                raise ValueError()
 
-        if term not in self.__postings:
-            return count
-
-        if start_position < 0:
-            start_position = 0
-        else:
-            start_position = int(start_position)
-
-        if end_position >= self.corpus_length():
-            end_position = self.corpus_length() - 1
-        else:
-            end_position = int(end_position)
-
-        results = []
-        for p in self.__postings[term]:
-            if start_position <= p and p <= end_position:
-                count += 1
-        return count
+        # Will return an iterator over the term's postings list
+        raise NotImplementedError()
 
 
     def dictionary(self):
         return set(self.__postings.keys())
+
+
+    def __getitem__(self, term):
+        return self.postings(term)
+
+
+    def __iter__(self):
+        return self.dictionary().__iter__()

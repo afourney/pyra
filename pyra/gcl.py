@@ -7,15 +7,32 @@ class GCL(object):
     def __init__(self, inverted_index):
         self.__idx = inverted_index
 
+    #
+    # Elementary Generators
+    #
+
+    def Term( self, term ):
+        return self.Phrase(term)
+
+   
     def Phrase( self, *tokens ):
         return PhraseGenerator(self.__idx, *tokens)
 
-    def List( self, *l ):
-        return ListGenerator(self.__idx, *l)
+
+    def Position( self, p ):
+        return ListGenerator(self.__idx, (p,p) )
+
+
+    def Slice( self, s ):
+        return ListGenerator(self.__idx, _slice2extent(s) )
+
 
     def Length( self, length ):
         raise NotImplementedError()
 
+    #
+    # Binary Operators
+    #
     def And( self, a, b ):
         raise NotImplementedError()
 
@@ -38,18 +55,15 @@ class GCL(object):
         raise NotImplementedError()
 
     #
-    # Convenience method
+    # Unary operators
     #
-    def Term( self, term ):
-        return self.Phrase(term)
+    def Start( self, a ):
+        raise NotImplementedError()
 
-    def Position( self, p ):
-        return self.List( (p,p) )
+    def End( self, a ):
+        raise NotImplementedError()
 
-    def Extent( self, e ):
-        return self.List( e )
-
-
+   
 
 
 class GCListGenerator(object):
@@ -397,3 +411,16 @@ def _extent2slice( extent ):
     return slice(start,stop)
 
 
+def _slice2extent( s ):
+    start = s.start
+    stop  = s.stop
+
+    if start is None:
+        start = -INF
+
+    if stop is None:
+        stop = INF
+    elif stop == 0:
+        stop = -INF
+
+    return (start, stop-1)
