@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='pyra',
-    version='0.1empty',
+    version='0.2.3dev',
     author = "Adam Fourney",
     url = "http://github.com/afourney/pyra",
     packages=['pyra',],
