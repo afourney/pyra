@@ -59,15 +59,29 @@ class InvertedIndex(object):
         return self.prev(term, INF)
 
 
-    def frequency(self, term, start=-INF, end=-INF):
+    def frequency(self, term, start=-INF, end=INF):
         # Returns the frequency of the term between the
-        # start and end positions (inclusive)
+        # start (inclusive) and end (exclusive)
 
         if term not in self.__postings:
             return 0
 
+        # You can also pass this object a slice
+        if hasattr(start, 'start') and hasattr(start, 'stop'):
+
+            if start.stop is None:
+                end = INF
+            else:
+                end = start.stop
+
+            if start.start is None:
+                start = -INF
+            else:
+                start = start.start
+
+
         istart = self.__inext(term, start - 1)
-        iend   = self.__iprev(term, end + 1)
+        iend   = self.__iprev(term, end)
 
         if istart == INF:
             return 0
