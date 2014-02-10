@@ -161,6 +161,7 @@ class GCListGenerator(object):
             else:
                 raise StopIteration()
 
+
 class ListGenerator(GCListGenerator):
 
     def __init__(self, inverted_index, *l):
