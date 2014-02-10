@@ -54,14 +54,14 @@ class GCL(object):
     def NotContainedIn( self, a, b ):
         raise NotImplementedError()
 
-    # #
-    # # Unary operators
-    # #
-    # def Start( self, a ):
-    #     return StartOperator(self.__idx, a)
+    #
+    # Unary operators
+    #
+    def Start( self, a ):
+        return StartOperator(self.__idx, a)
 
-    # def End( self, a ):
-    #     return EndOperator(self.__idx, a)
+    def End( self, a ):
+        return EndOperator(self.__idx, a)
 
    
 
@@ -259,6 +259,13 @@ class FixedLengthGenerator(GCListGenerator):
         self.__length = length
 
     def _first_starting_at_or_after(self, k):
+
+        if k >= self.inverted_index.corpus_length():
+            return (INF, INF)
+
+        if k < 0:
+            k = 0 
+
         v = k + self.__length - 1
 
         # Overflow, no way to fix
@@ -267,7 +274,15 @@ class FixedLengthGenerator(GCListGenerator):
         else:
             return (k, v)
         
+
     def _first_ending_at_or_after(self, k):
+
+        if k >= self.inverted_index.corpus_length():
+            return (INF, INF)
+
+        if k < 0:
+            k = 0 
+
         u = k - self.__length + 1 
 
         # Underflow, try to fix
@@ -285,6 +300,12 @@ class FixedLengthGenerator(GCListGenerator):
 
 
     def _last_ending_at_or_before(self, k):
+        if k < 0:
+            return (-INF, -INF)
+        
+        if k >= self.inverted_index.corpus_length():
+            k = self.inverted_index.corpus_length() - 1
+
         u = k - self.__length + 1 
 
         # Underflow, no way to fix
@@ -295,15 +316,21 @@ class FixedLengthGenerator(GCListGenerator):
 
 
     def _last_starting_at_or_before(self, k):
+        if k < 0:
+            return (-INF, -INF)
+        
+        if k >= self.inverted_index.corpus_length():
+            k = self.inverted_index.corpus_length() - 1
+
         v = k + self.__length - 1
 
         # Overflowed, try to fix!
         if v >= self.inverted_index.corpus_length():
-            d = v - self.inverted_indec.corpus_lenght() + 1
+            d = v - self.inverted_index.corpus_length() + 1
             k -= d
             v -= d
 
-            if u < 0:
+            if k < 0:
                 return (-INF, -INF)
             else:
                 return (k, v)
@@ -432,56 +459,56 @@ class ContainedByOperator(GCListGenerator):
         raise NotImplementedError()
 
 
-# class StartOperator(GCListGenerator):
+class StartOperator(GCListGenerator):
 
-#     def __init__(self, inverted_index, a):
-#         super(StartOperator, self).__init__(inverted_index)
-#         self.__a = a
+    def __init__(self, inverted_index, a):
+        super(StartOperator, self).__init__(inverted_index)
+        self.__a = a
 
-#     def _first_starting_at_or_after(self, k):
-#         u,v = self.__a._first_starting_at_or_after(k)
-#         return (u,u)
-
-
-#     def _first_ending_at_or_after(self, k):
-#         u,v = self.__a._first_ending_at_or_after(k)
-#         return (u,u)
+    def _first_starting_at_or_after(self, k):
+        u,v = self.__a._first_starting_at_or_after(k)
+        return (u,u)
 
 
-#     def _last_ending_at_or_before(self, k):
-#         u,v = self.__a._last_ending_at_or_before(k)
-#         return (u,u)
+    def _first_ending_at_or_after(self, k):
+        u,v = self.__a._first_starting_at_or_after(k)
+        return (u,u)
 
 
-#     def _last_starting_at_or_before(self, k):
-#         u,v = self.__a._last_starting_at_or_before(k)
-#         return (u,u)
+    def _last_ending_at_or_before(self, k):
+        u,v = self.__a._last_starting_at_or_before(k)
+        return (u,u)
 
 
-# class EndOperator(GCListGenerator):
-
-#     def __init__(self, inverted_index, a):
-#         super(EndOperator, self).__init__(inverted_index)
-#         self.__a = a
-
-#     def _first_starting_at_or_after(self, k):
-#         u,v = self.__a._first_starting_at_or_after(k)
-#         return (v,v)
+    def _last_starting_at_or_before(self, k):
+        u,v = self.__a._last_starting_at_or_before(k)
+        return (u,u)
 
 
-#     def _first_ending_at_or_after(self, k):
-#         u,v = self.__a._first_ending_at_or_after(k)
-#         return (v,v)
+class EndOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a):
+        super(EndOperator, self).__init__(inverted_index)
+        self.__a = a
+
+    def _first_starting_at_or_after(self, k):
+        u,v = self.__a._first_ending_at_or_after(k)
+        return (v,v)
 
 
-#     def _last_ending_at_or_before(self, k):
-#         u,v = self.__a._last_ending_at_or_before(k)
-#         return (v,v)
+    def _first_ending_at_or_after(self, k):
+        u,v = self.__a._first_ending_at_or_after(k)
+        return (v,v)
 
 
-#     def _last_starting_at_or_before(self, k):
-#         u,v = self.__a._last_starting_at_or_before(k)
-#         return (v,v)
+    def _last_ending_at_or_before(self, k):
+        u,v = self.__a._last_ending_at_or_before(k)
+        return (v,v)
+
+
+    def _last_starting_at_or_before(self, k):
+        u,v = self.__a._last_ending_at_or_before(k)
+        return (v,v)
 
 
 #
