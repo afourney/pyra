@@ -24,6 +24,7 @@ class InvertedIndex(object):
     # Core methods required to support the region algebra
     #
 
+    @property
     def corpus_length(self):
         return self.__corpus_length
 
@@ -147,6 +148,9 @@ class InvertedIndex(object):
     def __iter__(self):
         return self.dictionary().__iter__()
 
+    #
+    # The following two methods are where the magic happens
+    #
 
     def __inext(self, term, position):
 

@@ -12,6 +12,7 @@ class TestInvertedIndex(unittest.TestCase):
         tokens = corpus.split()
         iidx   = InvertedIndex(tokens)
 
+        self.assertEqual(iidx.corpus_length,                                15)
         self.assertEqual(iidx.first('dog'),                                 8)
         self.assertEqual(iidx.last('dog'),                                  12)
         self.assertEqual(iidx.next('dog', 8),                               12)

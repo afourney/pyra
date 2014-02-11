@@ -91,7 +91,7 @@ class GCListGenerator(object):
 
         if reverse:
             if k is None:
-                k = self.__idx.corpus_length()-1
+                k = self.__idx.corpus_length-1
             return GCListGenerator._reverse_iterator(self, k)
         else:
             if k is None:
@@ -261,7 +261,7 @@ class FixedLengthGenerator(GCListGenerator):
 
     def _first_starting_at_or_after(self, k):
 
-        if k >= self.inverted_index.corpus_length():
+        if k >= self.inverted_index.corpus_length:
             return (INF, INF)
 
         if k < 0:
@@ -270,7 +270,7 @@ class FixedLengthGenerator(GCListGenerator):
         v = k + self.__length - 1
 
         # Overflow, no way to fix
-        if v >= self.inverted_index.corpus_length():
+        if v >= self.inverted_index.corpus_length:
             return (INF, INF)
         else:
             return (k, v)
@@ -278,7 +278,7 @@ class FixedLengthGenerator(GCListGenerator):
 
     def _first_ending_at_or_after(self, k):
 
-        if k >= self.inverted_index.corpus_length():
+        if k >= self.inverted_index.corpus_length:
             return (INF, INF)
 
         if k < 0:
@@ -292,7 +292,7 @@ class FixedLengthGenerator(GCListGenerator):
             k += d
             u += d
 
-            if k >= self.inverted_index.corpus_length():
+            if k >= self.inverted_index.corpus_length:
                 return (INF, INF)
             else:
                 return (u, k)
@@ -304,8 +304,8 @@ class FixedLengthGenerator(GCListGenerator):
         if k < 0:
             return (-INF, -INF)
         
-        if k >= self.inverted_index.corpus_length():
-            k = self.inverted_index.corpus_length() - 1
+        if k >= self.inverted_index.corpus_length:
+            k = self.inverted_index.corpus_length - 1
 
         u = k - self.__length + 1 
 
@@ -320,14 +320,14 @@ class FixedLengthGenerator(GCListGenerator):
         if k < 0:
             return (-INF, -INF)
         
-        if k >= self.inverted_index.corpus_length():
-            k = self.inverted_index.corpus_length() - 1
+        if k >= self.inverted_index.corpus_length:
+            k = self.inverted_index.corpus_length - 1
 
         v = k + self.__length - 1
 
         # Overflowed, try to fix!
-        if v >= self.inverted_index.corpus_length():
-            d = v - self.inverted_index.corpus_length() + 1
+        if v >= self.inverted_index.corpus_length:
+            d = v - self.inverted_index.corpus_length + 1
             k -= d
             v -= d
 
