@@ -48,10 +48,10 @@ class GCL(object):
     # Binary Operators
     #
     def And( self, a, b ):
-        raise NotImplementedError()
+        return AndOperator(self.__idx, a, b)
 
     def Or( self, a, b ):
-        raise NotImplementedError()
+        return OrOperator(self.__idx, a, b)
 
     def BoundedBy( self, a, b ):
         return BoundedByOperator(self.__idx, a, b)
@@ -372,7 +372,90 @@ class FixedLengthGenerator(GCListGenerator):
                 return (k, v)
         else:
             return (k, v)
- 
+
+
+class AndOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a, b):
+        super(AndOperator, self).__init__(inverted_index)
+        self.__a = a
+        self.__b = b
+
+
+    def _first_starting_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+        
+        ua,va = a._first_starting_at_or_after(k)
+        if ua == INF and va == INF:
+            return (INF,INF)
+
+        ub,vb = b._first_starting_at_or_after(k)
+        if ub == INF and vb == INF:
+            return (INF,INF)
+
+        u0,v0 = a._last_ending_at_or_before(max(va,vb))
+        if u0 == -INF and v0 == -INF:
+            return (-INF,-INF)
+
+        u1,v1 = b._last_ending_at_or_before(max(va,vb))
+        if u1 == -INF and v1 == -INF:
+            return (-INF,-INF)
+
+        return (min(u0,u1), max(v0,v1))
+        
+
+    def _first_ending_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+        
+        u,v = self._last_ending_at_or_before(k-1)
+        return self._first_starting_at_or_after(u+1)
+
+
+    def _last_ending_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+
+    def _last_starting_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+
+class OrOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a, b):
+        super(OrOperator, self).__init__(inverted_index)
+        self.__a = a
+        self.__b = b
+
+
+    def _first_starting_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+        
+
+    def _first_ending_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+
+    def _last_ending_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+
+    def _last_starting_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
 
 class BoundedByOperator(GCListGenerator):
 
@@ -405,14 +488,6 @@ class BoundedByOperator(GCListGenerator):
         
         u,v = self._last_ending_at_or_before(k-1)
         return self._first_starting_at_or_after(u+1)
-
-        #u0,v0 = b._first_ending_at_or_after(k)
-        #if u0 == INF and v0 == INF:
-        #    return (INF,INF)
-        #
-        #u1,v1 = a._last_ending_at_or_before(u0-1)
-        #
-        #return (u1,v0)
 
 
     def _last_ending_at_or_before(self, k):
@@ -448,23 +523,11 @@ class ContainingOperator(GCListGenerator):
         a = self.__a
         b = self.__b
 
-        # Get the first candidate match for A
-        u0,v0 = a._first_starting_at_or_after(k)
-        if u0 == INF and v0 == INF:
+        u,v = a._first_starting_at_or_after(k)
+        if u == INF and v == INF:
             return (INF,INF)
 
-        # Get the first candidate match for B
-        u1,v1 = b._first_starting_at_or_after(u0)
-        if u1 == INF and v1 == INF:
-            return (INF,INF)
-
-        # We know u1 >= u0
-        # Check containment by verifying that v1 <= v0
-        if v1 <= v0:
-             return (u0,v0)
-        else:
-            # Keep looking
-            return self._first_starting_at_or_after(u1)
+        return self._first_ending_at_or_after(v)
         
 
     def _first_ending_at_or_after(self, k):
@@ -487,7 +550,7 @@ class ContainingOperator(GCListGenerator):
             return (u0,v0)
         else:
             # Keep looking
-            return self._first_ending_at_or_after(u1)
+            return self._first_ending_at_or_after(v1)
 
 
     def _last_ending_at_or_before(self, k):
