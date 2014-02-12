@@ -21,7 +21,7 @@ Our region algebra consists of the following elements:
     Elementary Types
     —---------------
     "token"             Tokens are quoted strings. Use \" to escape quotes, and \\ to escape escapes
-    “a”, “b”, “c”       Phrases are comma separated tokens
+    "a", "b", "c"       Phrases are comma separated tokens
     INT                 Positions are indicated as bare integers (e.g., 4071)
     [INT]               Lengths are indicated as integers inside square brackets     
 
@@ -43,7 +43,7 @@ run the following queries using pyra:
 
 Return the titles of all plays, acts, scenes, etc.
 
-    <title>".."</title>"         
+    "<title>".."</title>"         
 
     Results:
     slice(15,23):               <title> the tragedy of antony and cleopatra </title>
