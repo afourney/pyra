@@ -59,7 +59,7 @@ def p_gcl_token(t):
 def p_error(t):
         print("Syntax error at '%s'" % t.value)
 
-yacc.yacc()
+yacc.yacc(debug=0, write_tables=0)
 
 def gcl_yacc_parse(expr):
     return yacc.parse(expr)

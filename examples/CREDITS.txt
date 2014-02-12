@@ -1,0 +1,20 @@
+CREDITS
+=========
+
+The file 'shakespeare.xml.gz' contains the complete works of
+Shakespeare, encoded as one large XML document (roughly 7Mb).
+
+Cetainly, the works of Shakespeare have long been in the 
+public domain. This version, with XML markup, was prepared
+by Jon Bosak, and has also been placed in the public domain.
+
+Here are the relevant declarations:
+-----------------------------------
+
+Contents of 'shakespeare.xml.gz' placed in the public domain 
+by Moby Lexical Tools, 1992. SGML markup by Jon Bosak, 1992-1994.
+XML version by Jon Bosak, 1996-1998.
+
+Contents of 'shakespeare.xml.gz' may be freely copied and
+distributed worldwide.
+
