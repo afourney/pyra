@@ -6,7 +6,7 @@ Pyra is a python implementation of the region algebra and query language describ
 Region algebras are used to efficiently query semi-structured text documents. For a quick
 online introduction to this region algebra, and why it is useful, visit:
 
-[Wumpus Search Docs](http://www.wumpus-search.org/docs/gcl.html). 
+[Wumpus Search Docs](http://www.wumpus-search.org/docs/gcl.html) 
 
 In general, region algebras are good for extracting data from documents that have lightweight structure 
 (semi-structured), and are an alternative to more heavyweight solutions like XPath queries.
@@ -124,7 +124,7 @@ Here is a simplified sketch of the grammar pyra uses:
     gcl_expr :  ( gcl_expr )            |
                 gcl_expr ... gcl_expr   |
                 gcl_expr > gcl_expr     |
-                gcl_expr < gcl_expr'    |
+                gcl_expr < gcl_expr     |
                 [ INT ]                 |
                 INT                     |
                 phrase
