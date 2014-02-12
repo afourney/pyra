@@ -43,10 +43,10 @@ class GCL(object):
         return BoundedByOperator(self.__idx, a, b)
 
     def Containing( self, a, b ):
-        return ContainedByOperator(self.__idx, a, b)
+        return ContainingOperator(self.__idx, a, b)
 
     def ContainedIn( self, a, b ):
-        raise NotImplementedError()
+        return ContainedInOperator(self.__idx, a, b)
 
     def NotContaining( self, a, b ):
         raise NotImplementedError()
@@ -369,17 +369,17 @@ class BoundedByOperator(GCListGenerator):
         b = self.__b
 
         #1. Skip forwards to find the first interval matching a
-        u0,v0 = a.first_ending_at_or_after(k)
+        u0,v0 = a._first_ending_at_or_after(k)
         if u0 == INF and v0 == INF:
             return (INF,INF)
 
         #2. Skip forward to find the first interval matching b after 1.
-        u1,v1 = b.first_starting_at_or_after(v0+1)
+        u1,v1 = b._first_starting_at_or_after(v0+1)
         if u1 == INF and v1 == INF:
             return (INF,INF)
 
         #3. Skip backwards to find the last interval matching a ending before 2.
-        u2,v2 = a.last_ending_at_or_before(u1-1)
+        u2,v2 = a._last_ending_at_or_before(u1-1)
 
         return (u2,v1)
 
@@ -396,10 +396,10 @@ class BoundedByOperator(GCListGenerator):
         raise NotImplementedError()
 
 
-class ContainedByOperator(GCListGenerator):
+class ContainingOperator(GCListGenerator):
 
     def __init__(self, inverted_index, a, b):
-        super(ContainedByOperator, self).__init__(inverted_index)
+        super(ContainingOperator, self).__init__(inverted_index)
         self.__a = a
         self.__b = b
 
@@ -448,6 +448,79 @@ class ContainedByOperator(GCListGenerator):
             # Keep looking
             return self._first_ending_at_or_after(v0+1)
 
+
+    def _last_ending_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+    def _last_starting_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+        raise NotImplementedError()
+
+
+class ContainedInOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a, b):
+        super(ContainedInOperator, self).__init__(inverted_index)
+        self.__a = a
+        self.__b = b
+
+    def _first_starting_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        if k == INF:
+            return (INF, INF)
+
+        if k == -INF:
+            return (-INF, -INF)
+
+        u0,v0 = a._first_starting_at_or_after(k)
+
+        # For debugging
+        return (u0,v0)
+
+        if u0 == INF or v0 == INF:
+            return (INF, INF)
+
+        u1,v1 = b._first_ending_at_or_after(v0)
+
+        if u1 == INF or v1 == INF:
+            return (INF, INF)
+
+        if u1 <= u0:
+            return (u0,v0)
+        else:
+            return self._first_starting_at_or_after(u1)
+        
+
+    def _first_ending_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        if k == INF:
+            return (INF, INF)
+
+        if k == -INF:
+            return (-INF, -INF)
+
+        u0,v0 = a._first_ending_at_or_after(k)
+
+        if u0 == INF or v0 == INF:
+            return (INF, INF)
+
+        u1,v1 = b._first_ending_at_or_after(v0)
+
+        if u1 == INF or v1 == INF:
+            return (INF, INF)
+
+        if u1 <= u0:
+            return (u0,v0)
+        else:
+            return self._first_ending_at_or_after(u1)
+ 
 
     def _last_ending_at_or_before(self, k):
         a = self.__a
