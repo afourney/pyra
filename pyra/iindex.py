@@ -24,6 +24,7 @@ class InvertedIndex(object):
     # Core methods required to support the region algebra
     #
 
+    @property
     def corpus_length(self):
         return self.__corpus_length
 

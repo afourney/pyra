@@ -1,5 +1,9 @@
 *.py[cod]
 
+#Ply
+parser.out
+parsetab.py
+
 # C extensions
 *.so
 

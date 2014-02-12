@@ -8,11 +8,141 @@ class TestProcessor(unittest.TestCase):
     def setUp(self):
         pass
 
+
+    def test_single_token(self):
+        corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"
+                #   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+        tokens  = corpus.split()
+        iidx    = InvertedIndex(tokens)
+        g       = GCL(iidx)  
+
+        query = g.parse('"30"')
+
+        self.assertEqual( query._first_starting_at_or_after(0),  (6,6) )
+        self.assertEqual( query._first_starting_at_or_after(5),  (6,6) )
+        self.assertEqual( query._first_starting_at_or_after(6),  (6,6) )
+        self.assertEqual( query._first_starting_at_or_after(7),  (INF,INF) )
+
+        self.assertEqual( query._first_ending_at_or_after(0),  (6,6) )
+        self.assertEqual( query._first_ending_at_or_after(5),  (6,6) )
+        self.assertEqual( query._first_ending_at_or_after(6),  (6,6) )
+        self.assertEqual( query._first_ending_at_or_after(7),  (INF,INF) )
+
+        self.assertEqual( query._last_starting_at_or_before(5),  (-INF,-INF) )
+        self.assertEqual( query._last_starting_at_or_before(6),  (6,6) )
+        self.assertEqual( query._last_starting_at_or_before(7),  (6,6) )
+
+        self.assertEqual( query._last_ending_at_or_before(5),  (-INF,-INF) )
+        self.assertEqual( query._last_ending_at_or_before(6),  (6,6) )
+        self.assertEqual( query._last_ending_at_or_before(7),  (6,6) )
+
+
+    def test_single_token(self):
+        corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"
+                #   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+        tokens  = corpus.split()
+        iidx    = InvertedIndex(tokens)
+        g       = GCL(iidx)  
+
+        query = g.parse('"30".."50"')
+
+        self.assertEqual( query._first_starting_at_or_after(0),  (6,10) )
+        self.assertEqual( query._first_starting_at_or_after(5),  (6,10) )
+        self.assertEqual( query._first_starting_at_or_after(6),  (6,10) )
+        self.assertEqual( query._first_starting_at_or_after(7),  (INF,INF) )
+
+        self.assertEqual( query._first_ending_at_or_after(0),  (6,10) )
+        self.assertEqual( query._first_ending_at_or_after(5),  (6,10) )
+        self.assertEqual( query._first_ending_at_or_after(6),  (6,10) )
+        self.assertEqual( query._first_ending_at_or_after(7),  (6,10) )
+        self.assertEqual( query._first_ending_at_or_after(10),  (6,10) )
+        self.assertEqual( query._first_ending_at_or_after(11),  (INF,INF) )
+
+
+    def test_containing(self):
+        corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"
+                #   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+        tokens  = corpus.split()
+        iidx    = InvertedIndex(tokens)
+        g       = GCL(iidx)  
+
+        outer = g.parse('"20" .. "50"') 
+
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_starting_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_starting_at_or_after(4),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_starting_at_or_after(5),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_starting_at_or_after(6),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_starting_at_or_after(10), (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_starting_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_starting_at_or_after(4),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_starting_at_or_after(5),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_starting_at_or_after(6),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_starting_at_or_after(10), (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_starting_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_starting_at_or_after(4),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_starting_at_or_after(5),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_starting_at_or_after(6),  (INF,INF) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_starting_at_or_after(10), (INF,INF) )
+
+
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_ending_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_ending_at_or_after(5),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_ending_at_or_after(6),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"30"') )._first_ending_at_or_after(7),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_ending_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_ending_at_or_after(3),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_ending_at_or_after(4),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"20"') )._first_ending_at_or_after(5),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_ending_at_or_after(0),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_ending_at_or_after(9),  (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_ending_at_or_after(10), (4,10) )
+        self.assertEqual( g.Containing( outer, g.parse('"50"') )._first_ending_at_or_after(11), (INF,INF) )
+
+
+
+    def test_contained_in(self):
+        corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"
+                #   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+        tokens  = corpus.split()
+        iidx    = InvertedIndex(tokens)
+        g       = GCL(iidx)  
+
+        outer = g.parse('"20" .. "50"') 
+
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_starting_at_or_after(0),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_starting_at_or_after(5),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_starting_at_or_after(6),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_starting_at_or_after(7),  (INF,INF) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_starting_at_or_after(0),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_starting_at_or_after(3),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_starting_at_or_after(4),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_starting_at_or_after(5),  (INF,INF) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_starting_at_or_after(0),  (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_starting_at_or_after(9),  (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_starting_at_or_after(10), (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_starting_at_or_after(11), (INF,INF) )
+
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_ending_at_or_after(0),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_ending_at_or_after(5),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_ending_at_or_after(6),  (6,6) )
+        self.assertEqual( g.ContainedIn( g.parse('"30"'), outer )._first_ending_at_or_after(7),  (INF,INF) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_ending_at_or_after(0),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_ending_at_or_after(3),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_ending_at_or_after(4),  (4,4) )
+        self.assertEqual( g.ContainedIn( g.parse('"20"'), outer )._first_ending_at_or_after(5),  (INF,INF) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_ending_at_or_after(0),  (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_ending_at_or_after(9),  (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_ending_at_or_after(10), (10,10) )
+        self.assertEqual( g.ContainedIn( g.parse('"50"'), outer )._first_ending_at_or_after(11), (INF,INF) )
+
+
     def test_trivial_corpus(self):
         corpus  = "the quick brown fox jumps over the lazy dog and the brown dog runs away"
         tokens  = corpus.split()
         iidx    = InvertedIndex(tokens)
         g       = GCL(iidx)  
+
+        # A random spattering of tests...
 
         self.assertEqual(list( g.Term('dog')), [slice(8,9), slice(12,13)])
         self.assertEqual(list( g.Term('cat') ), [])
@@ -20,6 +150,7 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(list( g.BoundedBy(g.Term('brown'), g.Term('dog')) ), [slice(2,9), slice(11,13)])
         self.assertEqual(list( g.Containing(g.BoundedBy(g.Term('brown'), g.Term('dog')), g.Term('over')) ), [slice(2,9)])
         self.assertEqual(list( g.Containing(g.BoundedBy(g.Term('brown'), g.Term('dog')), g.Term('and')) ),  [])
+        self.assertEqual(list( g.ContainedIn(g.Term('over'), g.BoundedBy(g.Term('brown'), g.Term('dog'))) ), [slice(5,6)])
         self.assertEqual(list( g.Phrase('quick', 'brown', 'fox') ),     [slice(1,4)] )
         self.assertEqual(list( g.Phrase('quick', 'grey', 'fox')  ),     [] )
         self.assertEqual(list( g.Containing(g.BoundedBy(g.Term('brown'), g.Term('dog')), g.Term('and')) ),  [])

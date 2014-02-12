@@ -19,7 +19,7 @@ tokens = (
 # Simple tokens
 t_OP_AND            = r'\^'
 t_OP_OR             = r'\+'
-t_OP_BOUNDED_BY     = r'\.\.\.'
+t_OP_BOUNDED_BY     = r'\.\.\.?'
 t_OP_CONTAINING     = r'>'
 t_OP_CONTAINED_IN   = r'<'
 t_COMMA             = r','
@@ -67,8 +67,12 @@ def t_error(t):
 # Build the lexer.
 lex.lex()
 
-if __name__ == '__main__':
-    expr = " ".join(sys.argv[1:])
+# Hook for testing
+def gcl_lex(expr):
+    results = []
+
     lex.input(expr)
     for tok in iter(lex.token, None):
-         print repr(tok.type), repr(tok.value)
+        results.append( (repr(tok.type), repr(tok.value)) )
+
+    return results

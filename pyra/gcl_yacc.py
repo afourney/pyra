@@ -1,6 +1,6 @@
-from ply import *
-from gcl_lex import tokens
 import sys
+from ply import *
+from .gcl_lex import tokens
 
 precedence = (
     ('left','OP_BOUNDED_BY','OP_CONTAINING','OP_CONTAINED_IN'),
@@ -61,6 +61,5 @@ def p_error(t):
 
 yacc.yacc()
 
-if __name__ == '__main__':
-    expr = " ".join(sys.argv[1:])
-    print yacc.parse(expr)
+def gcl_yacc_parse(expr):
+    return yacc.parse(expr)

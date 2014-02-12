@@ -1,5 +1,19 @@
 #!/usr/bin/python
 
+###### BEGIN -- CAREFULLY IMPORT PARSING SUPPORT #####
+_parsing_support_loaded = False
+import imp
+try:
+    imp.find_module('ply')
+    _parsing_support_loaded = True
+except ImportError:
+    pass
+
+if _parsing_support_loaded:
+    from .gcl_yacc import gcl_yacc_parse
+###### END -- CAREFULLY IMPORT PARSING SUPPORT #####
+
+
 INF = float('inf')
 
 class GCL(object):
@@ -63,7 +77,29 @@ class GCL(object):
     def End( self, a ):
         return EndOperator(self.__idx, a)
 
-   
+    #
+    # Support for parsing gcl queries
+    # 
+    def parse( self, expr ):
+
+        if _parsing_support_loaded:
+            tree = gcl_yacc_parse( expr )
+            return self.__parse_helper( tree )
+        else:
+            raise NotImplementedError("GCL parsing requires the 'ply' module. "
+                                      "Ply can be installed from pip or easy_install. "
+                                      "Alternatively, just manually create GCL expressions "
+                                      "using the GCL factory methods. ")
+
+
+    def __parse_helper( self, subtree ):
+        op = subtree[0]
+        operands = list(subtree[1:])
+
+        if op not in ('Phrase', 'Position', 'Length'):
+            for i in range(0, len(operands)):
+                operands[i] = self.__parse_helper(operands[i])
+        return getattr(self, op)(*operands)
 
 
 class GCListGenerator(object):
@@ -91,7 +127,7 @@ class GCListGenerator(object):
 
         if reverse:
             if k is None:
-                k = self.__idx.corpus_length()-1
+                k = self.__idx.corpus_length-1
             return GCListGenerator._reverse_iterator(self, k)
         else:
             if k is None:
@@ -260,7 +296,7 @@ class FixedLengthGenerator(GCListGenerator):
 
     def _first_starting_at_or_after(self, k):
 
-        if k >= self.inverted_index.corpus_length():
+        if k >= self.inverted_index.corpus_length:
             return (INF, INF)
 
         if k < 0:
@@ -269,7 +305,7 @@ class FixedLengthGenerator(GCListGenerator):
         v = k + self.__length - 1
 
         # Overflow, no way to fix
-        if v >= self.inverted_index.corpus_length():
+        if v >= self.inverted_index.corpus_length:
             return (INF, INF)
         else:
             return (k, v)
@@ -277,7 +313,7 @@ class FixedLengthGenerator(GCListGenerator):
 
     def _first_ending_at_or_after(self, k):
 
-        if k >= self.inverted_index.corpus_length():
+        if k >= self.inverted_index.corpus_length:
             return (INF, INF)
 
         if k < 0:
@@ -291,7 +327,7 @@ class FixedLengthGenerator(GCListGenerator):
             k += d
             u += d
 
-            if k >= self.inverted_index.corpus_length():
+            if k >= self.inverted_index.corpus_length:
                 return (INF, INF)
             else:
                 return (u, k)
@@ -303,8 +339,8 @@ class FixedLengthGenerator(GCListGenerator):
         if k < 0:
             return (-INF, -INF)
         
-        if k >= self.inverted_index.corpus_length():
-            k = self.inverted_index.corpus_length() - 1
+        if k >= self.inverted_index.corpus_length:
+            k = self.inverted_index.corpus_length - 1
 
         u = k - self.__length + 1 
 
@@ -319,14 +355,14 @@ class FixedLengthGenerator(GCListGenerator):
         if k < 0:
             return (-INF, -INF)
         
-        if k >= self.inverted_index.corpus_length():
-            k = self.inverted_index.corpus_length() - 1
+        if k >= self.inverted_index.corpus_length:
+            k = self.inverted_index.corpus_length - 1
 
         v = k + self.__length - 1
 
         # Overflowed, try to fix!
-        if v >= self.inverted_index.corpus_length():
-            d = v - self.inverted_index.corpus_length() + 1
+        if v >= self.inverted_index.corpus_length:
+            d = v - self.inverted_index.corpus_length + 1
             k -= d
             v -= d
 
@@ -367,20 +403,13 @@ class BoundedByOperator(GCListGenerator):
         a = self.__a
         b = self.__b
 
-        #1. Skip forwards to find the first interval matching a
-        u0,v0 = a._first_ending_at_or_after(k)
+        u0,v0 = b._first_ending_at_or_after(k)
         if u0 == INF and v0 == INF:
             return (INF,INF)
 
-        #2. Skip forward to find the first interval matching b after 1.
-        u1,v1 = b._first_starting_at_or_after(v0+1)
-        if u1 == INF and v1 == INF:
-            return (INF,INF)
+        u1,v1 = a._last_ending_at_or_before(u0-1)
 
-        #3. Skip backwards to find the last interval matching a ending before 2.
-        u2,v2 = a._last_ending_at_or_before(u1-1)
-
-        return (u2,v1)
+        return (u1,v0)
 
 
     def _last_ending_at_or_before(self, k):
@@ -430,7 +459,7 @@ class ContainingOperator(GCListGenerator):
         b = self.__b
 
         # Get the first candidate match for A
-        u0,v0 = a._first_ending_at_ot_after(k)
+        u0,v0 = a._first_ending_at_or_after(k)
         if u0 == INF and v0 == INF:
             return (INF,INF)
 
