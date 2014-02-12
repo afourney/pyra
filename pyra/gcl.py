@@ -402,20 +402,33 @@ class BoundedByOperator(GCListGenerator):
     def _first_ending_at_or_after(self, k):
         a = self.__a
         b = self.__b
+        
+        u,v = self._last_ending_at_or_before(k-1)
+        return self._first_starting_at_or_after(u+1)
 
-        u0,v0 = b._first_ending_at_or_after(k)
-        if u0 == INF and v0 == INF:
-            return (INF,INF)
-
-        u1,v1 = a._last_ending_at_or_before(u0-1)
-
-        return (u1,v0)
+        #u0,v0 = b._first_ending_at_or_after(k)
+        #if u0 == INF and v0 == INF:
+        #    return (INF,INF)
+        #
+        #u1,v1 = a._last_ending_at_or_before(u0-1)
+        #
+        #return (u1,v0)
 
 
     def _last_ending_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u0,v0 = b._last_ending_at_or_before(k)
+        if u0 == INF and v0 == INF:
+            return (INF,INF)
+
+        u1,v1 = a._last_ending_at_or_before(u0-1)
+        if u1 == INF and v1 == INF:
+            return (INF,INF)
+
+        u2,v2 = b._first_starting_at_or_after(v1+1)
+        return (u1,v2)
 
 
     def _last_starting_at_or_before(self, k):
@@ -451,7 +464,7 @@ class ContainingOperator(GCListGenerator):
              return (u0,v0)
         else:
             # Keep looking
-            return self._first_starting_at_or_after(v0+1)
+            return self._first_starting_at_or_after(u1)
         
 
     def _first_ending_at_or_after(self, k):
@@ -474,7 +487,7 @@ class ContainingOperator(GCListGenerator):
             return (u0,v0)
         else:
             # Keep looking
-            return self._first_ending_at_or_after(v0+1)
+            return self._first_ending_at_or_after(u1)
 
 
     def _last_ending_at_or_before(self, k):
@@ -506,9 +519,6 @@ class ContainedInOperator(GCListGenerator):
             return (-INF, -INF)
 
         u0,v0 = a._first_starting_at_or_after(k)
-
-        # For debugging
-        return (u0,v0)
 
         if u0 == INF or v0 == INF:
             return (INF, INF)

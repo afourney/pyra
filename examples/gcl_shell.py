@@ -7,6 +7,9 @@ from pyra import InvertedIndex, GCL
 
 def main():
 
+    # Uber-dangerous
+    sys.setrecursionlimit(sys.getrecursionlimit() * 10) # 10 times the space to play
+
     # Load the complete works of Shakespeare, and 
     # do some trivial tokenization. It works for this
     # corpus, but I would NOT advise its use for
@@ -50,27 +53,21 @@ Example queries:
     Return the titles of all plays
     (i.e., the first title found in the play)
 
-        # DOES NOT WORK YET
-        # ("<title>".."</title>") < ("<play>".."</title>")         
-
-        # TRY THIS HACK
-        ("<play>", "<title>") .. "</title>"
+        ("<title>".."</title>") < ("<play>".."</title>")         
 
     Return the titles of all plays containing the word 'henry'
 
-        # DOES NOT WORK YET
-        #(("<title>".."</title>") < ("<play>".."</title>")) > "henry"         
+        (("<title>".."</title>") < ("<play>".."</title>")) > "henry"         
 
-        (("<play>", "<title>") .. "</title>") > "henry"
-
-    Return short play title (3 or few words)
+    Return short play titles (3 or few words)
     (Note: We have to include the tags in the token count)
-        
-        # DOES NOT WORK YET -- EVEN THIS HACK
-        (("<play>", "<title>") .. "</title>") < [6] 
 
-        # TRY THIS
-        [6] > (("<play>", "<title>") .. "</title>")
+        (("<title>".."</title>") < ("<play>".."</title>")) < [5] 
+
+    Return the title of all plays containing the line 'to be or not to be'
+
+        (("<title>".."</title>") < ("<play>".."</title>")) < (("<play>".."</play>") > ("to", "be", "or", "not", "to", "be"))
+
 
 Press Ctl-D to exit. 
 """)
@@ -92,7 +89,7 @@ Press Ctl-D to exit.
         try:
             query = gcl.parse(l)
             for r in query:
-                res = "slice(%d,%d)\t%s" % (r.start, r.stop, " ".join(corpus[r])) 
+                res = "slice(%d,%d):\t%s" % (r.start, r.stop, " ".join(corpus[r])) 
 
                 # Handle long lines
                 if len(res) > 80:
