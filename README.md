@@ -3,17 +3,19 @@ pyra - Python Region Algebra
 
 
 Pyra is a python implementation of the region algebra and query language described in [1]. 
-Region algebras are used to efficiently query semi-structured text documents. For a quick
-online introduction to this region algebra, and why it is useful, visit:
+Region algebras are used to efficiently query semi-structured text documents. This particular
+region algebra operates on Generalized Concordance Lists (GCLs). GCLs are lists of regions
+(a.k.a., extents), which obey the following constraint: *No region in the list may have another
+region from the same lists nested within it*. For a quick online introduction to this region
+algebra, and why it is useful, visit:
 
 [Wumpus Search](http://www.wumpus-search.org/docs/gcl.html) 
 
-In general, region algebras are good for extracting data from documents that have lightweight structure 
-(semi-structured), and are an alternative to more heavyweight solutions like XPath queries.
+In general, this region algebra is good for extracting data from documents that have lightweight
+structure, and is an alternative to more heavyweight solutions like XPath queries.
 
 
-Algebra and Query Language
-===========================
+### Algebra and Query Language
 
 Our region algebra consists of the following elements:
 
@@ -26,23 +28,22 @@ Our region algebra consists of the following elements:
     INT                 Positions are indicated as bare integers (e.g., 4071)
     [INT]               Lengths are indicated as integers inside square brackets     
 
-    Operators (here A and B are arbitrary region algebra expressions)
-    -----------------------------------------------------------------
-    A .. B              Extent that starts with A and ends with B
-    A > B               Extent A contains extent B 
-    A < B               Extent A is contained in extent B 
+    Operators (here A and B are arbitrary region algebra expressions, N is an integer)
+    ----------------------------------------------------------------------------------
+    A .. B              Returns all extents that start with A and end with B
+    A > B               Returns all extents that match A and contain an extent matching B 
+    A < B               Returns all extents that match B, contained in an extent matching A
+    [N]                 Returns all extents of length N (basically a sliding window)
 
     More operators will be implemented in the future. With these 3, we can do a lot (see below)
 
 
-Examples
-========
+### Examples
 
-Suppose we have indexed the complete works of Shakespeare, as an XML-like document. We can then 
-run the following queries using pyra:
+Suppose we an XML document containing the complete works of Shakespeare (see './pyra/examples').
+We can then run the following queries using pyra:
 
-
-Return the titles of all plays, acts, scenes, etc.
+**Return the titles of all plays, acts, scenes, etc.**
 
     "<title>".."</title>"         
 
@@ -59,8 +60,8 @@ Return the titles of all plays, acts, scenes, etc.
     ... And, many more ...
 
  
-Return the titles of all plays
-(i.e., the first title found in the play)
+**Return the titles of all plays**
+**(i.e., the first title found in the play)**
 
     ("<title>".."</title>") < ("<play>".."</title>")         
 
@@ -77,7 +78,7 @@ Return the titles of all plays
     ... And, many more ...
 
 
-Return the titles of all plays containing the word 'henry'
+**Return the titles of all plays containing the word 'henry'**
 
     (("<title>".."</title>") < ("<play>".."</title>")) > "henry"  
 
@@ -89,9 +90,9 @@ Return the titles of all plays containing the word 'henry'
     slice(469240,469249):        <title> the third part of henry the sixth </title>
     slice(505920,505932):        <title> the famous history of the life of henry the ei...
 
-  
-Return short play titles (4 or few words)
-(Note: We have to include the tags in the token count)
+
+**Return short play titles (4 or few words)**
+**(Note: We have to include the tags in the token count)**
 
     (("<title>".."</title>") < ("<play>".."</title>")) < [6] 
 
@@ -109,7 +110,7 @@ Return short play titles (4 or few words)
     slice(1233968,1233974):      <title> the winter s tale </title>
 
 
-Return the title of all plays containing the phrase 'to be or not to be'
+**Return the title of all plays containing the phrase 'to be or not to be'**
 
     (("<title>".."</title>") < ("<play>".."</title>")) < (("<play>".."</play>") > ("to", "be", "or", "not", "to", "be"))
 
@@ -117,8 +118,8 @@ Return the title of all plays containing the phrase 'to be or not to be'
     slice(239304,239313):        <title> the tragedy of hamlet prince of denmark </title>
 
 
-Ply Grammar
-===========
+### Ply Grammar
+
 This package uses ply python module to parse the GCL expressions.
 Here is a simplified sketch of the grammar pyra uses:
 
@@ -133,8 +134,7 @@ Here is a simplified sketch of the grammar pyra uses:
     phrase : STRING , phrase  |
              STRING
 
-References
-==========
+### References
 
 [1]  Clarke, C. L., Cormack, G. V., & Burkowski, F. J. (1995). An algebra for structured text search
      and a framework for its implementation. The Computer Journal, 38(1), 43-56. Chicago
