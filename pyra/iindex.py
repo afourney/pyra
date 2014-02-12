@@ -24,7 +24,6 @@ class InvertedIndex(object):
     # Core methods required to support the region algebra
     #
 
-    @property
     def corpus_length(self):
         return self.__corpus_length
 
@@ -60,29 +59,15 @@ class InvertedIndex(object):
         return self.prev(term, INF)
 
 
-    def frequency(self, term, start=-INF, end=INF):
+    def frequency(self, term, start=-INF, end=-INF):
         # Returns the frequency of the term between the
-        # start (inclusive) and end (exclusive)
+        # start and end positions (inclusive)
 
         if term not in self.__postings:
             return 0
 
-        # You can also pass this object a slice
-        if hasattr(start, 'start') and hasattr(start, 'stop'):
-
-            if start.stop is None:
-                end = INF
-            else:
-                end = start.stop
-
-            if start.start is None:
-                start = -INF
-            else:
-                start = start.start
-
-
         istart = self.__inext(term, start - 1)
-        iend   = self.__iprev(term, end)
+        iend   = self.__iprev(term, end + 1)
 
         if istart == INF:
             return 0
@@ -148,9 +133,6 @@ class InvertedIndex(object):
     def __iter__(self):
         return self.dictionary().__iter__()
 
-    #
-    # The following two methods are where the magic happens
-    #
 
     def __inext(self, term, position):
 

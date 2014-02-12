@@ -1,6 +1,7 @@
 pyra - Python Region Algebra
 ============================
 
+
 Pyra is a python implementation of the region query algebra described in [1]. Region algebras are
 used to efficiently query semi-structured text documents. For a quick online introduction to this
 region algebra, and why it is useful, visit the [Wumpus Search Docs](http://www.wumpus-search.org/docs/gcl.html). 
@@ -24,8 +25,9 @@ In general, region algebras are good for extracting data from documents that hav
 
 The above prints:
 
-    slice(2,9)
-    'brown fox jumps over the lazy dog'
+slice(2,9)
+
+'brown fox jumps over the lazy dog'
 
 
 
