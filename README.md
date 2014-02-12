@@ -6,7 +6,7 @@ Pyra is a python implementation of the region algebra and query language describ
 Region algebras are used to efficiently query semi-structured text documents. For a quick
 online introduction to this region algebra, and why it is useful, visit:
 
-[Wumpus Search Docs](http://www.wumpus-search.org/docs/gcl.html) 
+[Wumpus Search](http://www.wumpus-search.org/docs/gcl.html) 
 
 In general, region algebras are good for extracting data from documents that have lightweight structure 
 (semi-structured), and are an alternative to more heavyweight solutions like XPath queries.
@@ -16,6 +16,7 @@ Algebra and Query Language
 ===========================
 
 Our region algebra consists of the following elements:
+
 (Essentially identical to the conventions used in Wumpus [See above])
 
     Elementary Types
@@ -29,7 +30,7 @@ Our region algebra consists of the following elements:
     -----------------------------------------------------------------
     A .. B              Extent that starts with A and ends with B
     A > B               Extent A contains extent B 
-    A < B               Extent A contain is contained in extent B 
+    A < B               Extent A is contained in extent B 
 
     More operators will be implemented in the future. With these 3, we can do a lot (see below)
 
