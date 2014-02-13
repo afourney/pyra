@@ -26,7 +26,6 @@ Our region algebra consists of the following elements:
     "token"             Tokens are quoted strings. Use \" to escape quotes, and \\ to escape escapes
     "a", "b", "c"       Phrases are comma separated tokens
     INT                 Positions are indicated as bare integers (e.g., 4071)
-    [INT]               Lengths are indicated as integers inside square brackets     
 
     Operators (here A and B are arbitrary region algebra expressions, N is an integer)
     ----------------------------------------------------------------------------------
@@ -39,7 +38,7 @@ Our region algebra consists of the following elements:
     _{A}                The 'start' projection. For each extent (u,v) in A, return (u,u)
     {A}_                The 'end' projection. For each extent (u,v) in A, return (v,v)
 
-    [N]                 Returns all extents of length N (basically a sliding window)
+    [N]                 Returns all extents of length N, where N is an integer (basically a sliding window)
 
     Not yet implemented:
     A /> B              Returns all extents that match A but do not contain an extent matching B
