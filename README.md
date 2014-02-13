@@ -31,7 +31,7 @@ Our region algebra consists of the following elements:
     Operators (here A and B are arbitrary region algebra expressions, N is an integer)
     ----------------------------------------------------------------------------------
     A ^ B               Returns all extents that match both A and B
-    A + B               (not implemented) Returns all extents that match either A or B (or both)
+    A + B               Returns all extents that match either A or B (or both)
     A .. B              Returns all extents that start with A and end with B
     A > B               Returns all extents that match A and contain an extent matching B 
     A < B               Returns all extents that match A, contained in an extent matching B
