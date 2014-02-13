@@ -34,10 +34,16 @@ Our region algebra consists of the following elements:
     A + B               (not implemented) Returns all extents that match either A or B (or both)
     A .. B              Returns all extents that start with A and end with B
     A > B               Returns all extents that match A and contain an extent matching B 
-    A < B               Returns all extents that match B, contained in an extent matching A
+    A < B               Returns all extents that match A, contained in an extent matching B
+
+    _{A}                The 'start' projection. For each extent (u,v) in A, return (u,u)
+    {A}_                The 'end' projection. For each extent (u,v) in A, return (v,v)
+
     [N]                 Returns all extents of length N (basically a sliding window)
 
-    More operators will be implemented in the future. With these 3, we can do a lot (see below)
+    Not yet implemented:
+    A /> B              Returns all extents that match A but do not contain an extent matching B
+    A /< B              Returns all extents that match A, not contained in an extent matching B
 
 
 ### Examples

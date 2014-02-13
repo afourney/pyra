@@ -9,25 +9,33 @@ tokens = (
     'OP_BOUNDED_BY',
     'OP_CONTAINING',
     'OP_CONTAINED_IN',
+    'OP_START_PROJECTION',
+    'OP_END_PROJECTION',
     'COMMA',
-    'LPAREN',
+    'LPAREN',  # Regular (round)
     'RPAREN',
-    'LSPAREN',
+    'LSPAREN', # Square
     'RSPAREN',
+    'LCPAREN', # Curly
+    'RCPAREN', # Curly
     'PARAM'
 )
 
 # Simple tokens
-t_OP_AND            = r'\^'
-t_OP_OR             = r'\+'
-t_OP_BOUNDED_BY     = r'\.\.\.?'
-t_OP_CONTAINING     = r'>'
-t_OP_CONTAINED_IN   = r'<'
-t_COMMA             = r','
-t_LPAREN            = r'\('
-t_RPAREN            = r'\)'
-t_LSPAREN           = r'\['
-t_RSPAREN           = r'\]'
+t_OP_AND                = r'\^'
+t_OP_OR                 = r'\+'
+t_OP_BOUNDED_BY         = r'\.\.\.?'
+t_OP_CONTAINING         = r'>'
+t_OP_CONTAINED_IN       = r'<'
+t_OP_START_PROJECTION   = r'\_\{'
+t_OP_END_PROJECTION     = r'\}\_'
+t_COMMA                 = r','
+t_LPAREN                = r'\('
+t_RPAREN                = r'\)'
+t_LSPAREN               = r'\['
+t_RSPAREN               = r'\]'
+t_LCPAREN               = r'\{'
+t_RCPAREN               = r'\}'
 
 def t_INT(t):
     r'\d+'

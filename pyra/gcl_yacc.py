@@ -5,11 +5,21 @@ from .gcl_lex import tokens
 precedence = (
     ('left','OP_BOUNDED_BY','OP_CONTAINING','OP_CONTAINED_IN'),
     ('left','OP_AND','OP_OR'),
+    ('left','OP_START_PROJECTION', 'OP_END_PROJECTION'),
+    ('left','COMMA'),
     )
 
 def p_gcl_expr(t):
     'gcl_expr : LPAREN gcl_expr RPAREN'
     t[0] = t[2]
+
+def p_gcl_start_projection(t):
+    'gcl_expr : OP_START_PROJECTION gcl_expr RCPAREN'
+    t[0] = ('Start', t[2])
+
+def p_gcl_end_projection(t):
+    'gcl_expr : LCPAREN gcl_expr OP_END_PROJECTION'
+    t[0] = ('End', t[2])
 
 def p_gcl_and(t):
     'gcl_expr : gcl_expr OP_AND gcl_expr'
