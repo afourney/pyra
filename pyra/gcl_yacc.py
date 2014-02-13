@@ -39,6 +39,10 @@ def p_gcl_position(t):
     'gcl_expr : INT'
     t[0] = ('Position', t[1])
 
+def p_gcl_param(t):
+    'gcl_expr : PARAM'
+    t[0] = ('Param', t[1])
+
 def p_gcl_phrase(t):
     'gcl_expr : phrase'
     items = ['Phrase']

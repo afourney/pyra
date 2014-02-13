@@ -119,6 +119,49 @@ We can then run the following queries using pyra:
     Results:
     slice(239304,239313):        <title> the tragedy of hamlet prince of denmark </title>
 
+### Code Examples
+
+So how do you actually write code that uses or calls *pyra*?
+
+Here's an example implementation of the above queries:
+
+        from pyra import InvertedIndex, GCL
+
+        # See examples/gcl_shell.py for an example describing how to get
+        # a tokenized corpus for Shakespeare
+
+        iindex  = InvertedIndex(tokens)
+        gcl     = GCL(iidx)  
+
+        # Print titles of acts, plays, scenes, etc
+        for myslice in g.parse('"<title>".."</title>"'):
+            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
+
+
+        # Print titles of plays
+        play_titles = g.parse('("<title>".."</title>") < ("<play>".."</title>")')
+
+        for myslice in play_titles:
+            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
+
+        
+        # Return the titles of plays containing the word 'henry'
+        #
+        # Use parameterization to reuse the last expression
+        # (Makes for readable code, and may benefit from results caching
+        # if I ever get around to implementing it)
+
+        for myslice in g.parse('%1 > "henry"', play_titles):
+            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
+      
+
+        # Return the titles of plays, where the plays mention a
+        # 'witch' and 'duncan' 
+
+        whole_plays = g.parse("<play>..</play>")
+        for myslice in g.parse('%1 < (%2 > ("witch" ^ "duncan"))', play_titles, whole_plays):
+            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
+
 
 ### Ply Grammar
 

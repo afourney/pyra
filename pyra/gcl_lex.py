@@ -13,7 +13,8 @@ tokens = (
     'LPAREN',
     'RPAREN',
     'LSPAREN',
-    'RSPAREN'
+    'RSPAREN',
+    'PARAM'
 )
 
 # Simple tokens
@@ -41,10 +42,6 @@ def t_STRING(t):
     for i in range(0, len(str)):
         c = str[i]
         if escaped:
-            if c == "n":
-                c = "\n"
-            elif c == "t":
-                c = "\t"
             new_str += c
             escaped = 0
         else:
@@ -55,6 +52,10 @@ def t_STRING(t):
     t.value = new_str
     return t
 
+def t_PARAM(t):
+    r'%\d+'
+    t.value = t.value[1:]
+    return t
 
 # These are the things that should be ignored.
 t_ignore = ' \t'
