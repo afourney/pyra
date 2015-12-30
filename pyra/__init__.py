@@ -3,3 +3,4 @@ warnings.warn("CAUTION: This module is in its infancy, and has many bugs!", Impo
 
 from .iindex import InvertedIndex, INF
 from .gcl import GCL
+from .icover import CoverDensityRanking 
