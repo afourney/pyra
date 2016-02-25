@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from math import log
 
 INF = float('inf')
 
@@ -9,6 +10,36 @@ class CoverDensityRanking(object):
 
     def iCovers(self, i, query):
         return CoverGenerator(self.__idx, i, query)
+
+    def rank(self, query):
+
+        # Deduplicate the query
+        q = dict()
+        for t in query:
+            q[t] = 1
+        query = q.keys()
+        q = None
+
+        results = list()
+        for i in range(0, len(query)):
+            results.extend([(c, self.__score(c)) for c in self.iCovers(i+1,query)])
+      
+        results = sorted(results, key=lambda x: x[1], reverse=True)
+        return results
+
+           
+        
+
+    def __score(self, icover):
+        i = len(icover["terms"])
+        l = icover["extent"][1] - icover["extent"][0] + 1
+        N = self.__idx.corpus_length
+
+        acc = 0
+        for t in icover["terms"]:
+            f = self.__idx.frequency(t)
+            acc += log(float(N)/float(f), 2.0)
+        return acc - i*log(l,2.0) 
 
 
 class CoverGenerator(object):
@@ -25,8 +56,8 @@ class CoverGenerator(object):
     def inverted_index(self):
         return self.__idx
 
-    def iterator(self, k=None, **args):
-        return GCListGenerator._forward_iterator(self, k)
+    def iterator(self, k=0, **args):
+        return CoverGenerator._forward_iterator(self, k)
 
     class _forward_iterator(object):
         def __init__(self, generator, k):
@@ -43,11 +74,12 @@ class CoverGenerator(object):
             if self.__k == INF:
                 raise StopIteration()
 
-            u,v = self.__generator._first_starting_at_or_after(self.__k)
+            r = self.__generator._first_starting_at_or_after(self.__k)
+            u,v = r["extent"]
 
             if u != INF:
                 self.__k = u + 1
-                return _extent2slice( (u,v) )
+                return r #_extent2slice( (u,v) )
             else:
                 raise StopIteration()
 
@@ -83,9 +115,9 @@ class CoverGenerator(object):
 
         extent = (l_sorted[0], q)
         if abs(extent[0]) == INF or abs(extent[1]) == INF:
-            return (INF, INF)
+            return { "extent": (INF, INF), "terms": terms }
         else:
-            return extent
+            return { "extent": extent, "terms": terms }
 
 
     def _r(self, t, k):
