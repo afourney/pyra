@@ -184,7 +184,31 @@ Here is a simplified sketch of the grammar pyra uses:
     phrase : STRING , phrase  |
              STRING
 
+### Passage Ranking
+
+The passage-ranking implementation in `pyra/icover.py` uses the i-cover generation
+algorithm and logarithmic term-frequency and passage-length scoring described in
+[2] and [3]. For a fuller account of passage retrieval and answer extraction in
+the MultiText question-answering system, see [4].
+
 ### References
 
 [1]  Clarke, C. L., Cormack, G. V., & Burkowski, F. J. (1995). An algebra for structured text search
      and a framework for its implementation. The Computer Journal, 38(1), 43-56. Chicago
+
+[2]  Clarke, C. L. A., & Terra, E. L. (2004).
+     [Approximating the Top-m Passages in a Parallel Question Answering System](https://doi.org/10.1145/1031171.1031259).
+     Proceedings of CIKM 2004, 454-462.
+     [PDF](https://plg.uwaterloo.ca/~claclark/top.pdf).
+     Section 3 includes the passage-scoring formula (Equation 1) and i-cover generation algorithm (Figure 3).
+
+[3]  Clarke, C. L. A., Cormack, G. V., & Lynam, T. R. (2001).
+     [Exploiting Redundancy in Question Answering](https://doi.org/10.1145/383952.384024).
+     Proceedings of SIGIR 2001, 358-365.
+     [Author's PostScript version](https://plg.uwaterloo.ca/~claclark/sigir01.ps).
+     Section 2 describes the passage-scoring model and i-covers.
+
+[4]  Clarke, C. L. A., Cormack, G. V., Lynam, T. R., & Terra, E. L. (2006).
+     [Question Answering by Passage Selection](https://doi.org/10.1007/978-1-4020-4746-6_8).
+     In T. Strzalkowski & S. Harabagiu (Eds.), Advances in Open Domain Question Answering,
+     259-283. Springer.
