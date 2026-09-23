@@ -14,6 +14,32 @@ algebra, and why it is useful, visit:
 In general, this region algebra is good for extracting data from documents that have lightweight
 structure, and is an alternative to more heavyweight solutions like XPath queries.
 
+### Installation
+
+Requires Python 3.11 or newer, including Python 3.14. From a checkout:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+```
+
+Installation includes PLY 3.11 for parsing query strings. The existing query
+language and Python API are unchanged.
+
+Run the interactive Shakespeare example or the tests from the repository root:
+
+```sh
+python examples/gcl_shell.py
+python -m unittest discover -s test -v
+```
+
+For development, use `python -m pip install -e .` instead.
+
+GitHub Actions runs the suite on Python 3.11, 3.12, 3.13, and 3.14 for every
+pull request and push to `master`. CI installs the package with uv and runs the
+tests in isolated mode (`python -I`) to exercise the installed library.
+
 
 ### Algebra and Query Language
 
@@ -34,20 +60,17 @@ Our region algebra consists of the following elements:
     A .. B              Returns all extents that start with A and end with B
     A > B               Returns all extents that match A and contain an extent matching B 
     A < B               Returns all extents that match A, contained in an extent matching B
+    A /> B              Returns all extents that match A but do not contain an extent matching B
+    A /< B              Returns all extents that match A, not contained in an extent matching B
 
     _{A}                The 'start' projection. For each extent (u,v) in A, return (u,u)
     {A}_                The 'end' projection. For each extent (u,v) in A, return (v,v)
 
     [N]                 Returns all extents of length N, where N is an integer (basically a sliding window)
 
-    Not yet implemented:
-    A /> B              Returns all extents that match A but do not contain an extent matching B
-    A /< B              Returns all extents that match A, not contained in an extent matching B
-
-
 ### Examples
 
-Suppose we an XML document containing the complete works of Shakespeare (see './pyra/examples').
+Suppose we have an XML document containing the complete works of Shakespeare (see './examples').
 We can then run the following queries using pyra:
 
 **Return the titles of all plays, acts, scenes, etc.**
@@ -130,43 +153,33 @@ So how do you actually write code that uses or calls *pyra*?
 
 Here's an example implementation of the above queries:
 
-        from pyra import InvertedIndex, GCL
+```python
+from pyra import InvertedIndex, GCL
 
-        # See examples/gcl_shell.py for an example describing how to get
-        # a tokenized corpus for Shakespeare
+# Replace this sample with tokenized Shakespeare text; see examples/gcl_shell.py.
+corpus = "<play> <title> macbeth </title> witch duncan </play>".split()
+gcl = GCL(InvertedIndex(corpus))
 
-        iindex  = InvertedIndex(tokens)
-        gcl     = GCL(iidx)  
+# Print titles of acts, plays, scenes, etc.
+for region in gcl.parse('"<title>".."</title>"'):
+    print(f"{region}\t{' '.join(corpus[region])}")
 
-        # Print titles of acts, plays, scenes, etc
-        for myslice in g.parse('"<title>".."</title>"'):
-            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
+# Print titles of plays.
+play_titles = gcl.parse('("<title>".."</title>") < ("<play>".."</title>")')
+for region in play_titles:
+    print(f"{region}\t{' '.join(corpus[region])}")
 
+# Use parameterization to reuse an expression.
+for region in gcl.parse('%1 > "henry"', play_titles):
+    print(f"{region}\t{' '.join(corpus[region])}")
 
-        # Print titles of plays
-        play_titles = g.parse('("<title>".."</title>") < ("<play>".."</title>")')
-
-        for myslice in play_titles:
-            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
-
-        
-        # Return the titles of plays containing the word 'henry'
-        #
-        # Use parameterization to reuse the last expression
-        # (Makes for readable code, and may benefit from results caching
-        # if I ever get around to implementing it)
-
-        for myslice in g.parse('%1 > "henry"', play_titles):
-            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
-      
-
-        # Return the titles of plays, where the plays mention a
-        # 'witch' and 'duncan' 
-
-        whole_plays = g.parse("<play>..</play>")
-        for myslice in g.parse('%1 < (%2 > ("witch" ^ "duncan"))', play_titles, whole_plays):
-            print("%s \t %s", (str(myslice), " ".join(corpus[myslice]))
-
+# Return the titles of plays mentioning both 'witch' and 'duncan'.
+whole_plays = gcl.parse('"<play>".."</play>"')
+for region in gcl.parse(
+    '%1 < (%2 > ("witch" ^ "duncan"))', play_titles, whole_plays
+):
+    print(f"{region}\t{' '.join(corpus[region])}")
+```
 
 ### Ply Grammar
 
@@ -177,6 +190,8 @@ Here is a simplified sketch of the grammar pyra uses:
                 gcl_expr ... gcl_expr   |
                 gcl_expr > gcl_expr     |
                 gcl_expr < gcl_expr     |
+                gcl_expr /> gcl_expr    |
+                gcl_expr /< gcl_expr    |
                 [ INT ]                 |
                 INT                     |
                 phrase

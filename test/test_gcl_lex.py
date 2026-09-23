@@ -11,5 +11,29 @@ class TestGclLex(unittest.TestCase):
         expr = '123 ... 456'
         results = gcl_lex(expr)
 
-        # TODO run some tests
-        # self.assertEqual( result, expected )
+        self.assertEqual(results, [
+            ("'INT'", "123"),
+            ("'OP_BOUNDED_BY'", "'...'"),
+            ("'INT'", "456"),
+        ])
+
+    def test_negative_containment(self):
+        expr = '1/>2/<3 > 4 < 5'
+        results = gcl_lex(expr)
+
+        self.assertEqual(results, [
+            ("'INT'", "1"),
+            ("'OP_NOT_CONTAINING'", "'/>'"),
+            ("'INT'", "2"),
+            ("'OP_NOT_CONTAINED_IN'", "'/<'"),
+            ("'INT'", "3"),
+            ("'OP_CONTAINING'", "'>'"),
+            ("'INT'", "4"),
+            ("'OP_CONTAINED_IN'", "'<'"),
+            ("'INT'", "5"),
+        ])
+
+        self.assertEqual(gcl_lex('"/>" "/<"'), [
+            ("'STRING'", "'/>'"),
+            ("'STRING'", "'/<'"),
+        ])

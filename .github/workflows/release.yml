@@ -1,0 +1,87 @@
+name: release
+
+# Push v0.2.5 to publish version 0.2.5. Manual runs only build and validate.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+
+      - name: Check the tag matches the project version
+        if: github.event_name == 'push'
+        run: |
+          version=$(uv version --short)
+          tag=${GITHUB_REF_NAME#v}
+          if [ "$version" != "$tag" ]; then
+            echo "::error::Tag $tag does not match pyproject.toml version $version"
+            exit 1
+          fi
+
+      - run: uv build --out-dir dist
+
+      - name: Check the distribution contents and version
+        run: |
+          python - <<'PY'
+          import email
+          import pathlib
+          import tomllib
+          import zipfile
+
+          project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
+          wheels = list(pathlib.Path("dist").glob("*.whl"))
+          sdists = list(pathlib.Path("dist").glob("*.tar.gz"))
+          assert len(wheels) == len(sdists) == 1, "Expected one wheel and one source distribution"
+          assert all(path.name.startswith("pyra-") for path in wheels + sdists)
+          with zipfile.ZipFile(wheels[0]) as wheel:
+              names = wheel.namelist()
+              for module in pathlib.Path("pyra").glob("*.py"):
+                  assert module.as_posix() in names, f"Missing module: {module}"
+              metadata_path = next(name for name in names if name.endswith(".dist-info/METADATA"))
+              metadata_dir = metadata_path.rsplit("/", 1)[0] + "/"
+              assert all(name.startswith(("pyra/", metadata_dir)) for name in names), names
+              metadata = email.message_from_bytes(wheel.read(metadata_path))
+              assert metadata["Name"] == project["name"], metadata["Name"]
+              assert metadata["Version"] == project["version"], metadata["Version"]
+          PY
+
+      - name: Check the metadata renders on PyPI
+        run: uvx twine check --strict dist/*
+
+      - name: Test the installed wheel
+        run: |
+          uv pip install dist/*.whl
+          .venv/bin/python -I -m unittest discover -s test -v
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/pyra/
+    permissions:
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
