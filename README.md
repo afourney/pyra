@@ -60,15 +60,29 @@ Our region algebra consists of the following elements:
     A .. B              Returns all extents that start with A and end with B
     A > B               Returns all extents that match A and contain an extent matching B 
     A < B               Returns all extents that match A, contained in an extent matching B
+    A /> B              Returns all extents that match A but do not contain an extent matching B
+    A /< B              Returns all extents that match A, not contained in an extent matching B
 
     _{A}                The 'start' projection. For each extent (u,v) in A, return (u,u)
     {A}_                The 'end' projection. For each extent (u,v) in A, return (v,v)
 
     [N]                 Returns all extents of length N, where N is an integer (basically a sliding window)
 
-    Not yet implemented:
-    A /> B              Returns all extents that match A but do not contain an extent matching B
-    A /< B              Returns all extents that match A, not contained in an extent matching B
+All implemented operators support the paper's four access functions: the first
+extent starting or ending at or after a position, and the last extent ending or
+starting at or before a position. Operators seek through their operands lazily,
+without materializing intermediate GC-lists. Results can be traversed in either
+direction using `query.iterator()` or `query.iterator(reverse=True)`.
+
+The negative containment operators are also available as `gcl.NotContaining(a, b)`
+and `gcl.NotContainedIn(a, b)`. They filter the extents of A, rather than subtracting
+pieces of text. Containment includes equal extents, so `A /> A` and `A /< A` are
+empty; if B is empty, both operators return all of A. They have the same precedence
+and left associativity as `>` and `<`.
+
+For example, `("<scene>".."</scene>") /> "hamlet"` selects scenes without the token
+`"hamlet"`, while `"hamlet" /< ("<title>".."</title>")` selects occurrences outside
+title regions.
 
 
 ### Examples
@@ -193,6 +207,8 @@ Here is a simplified sketch of the grammar pyra uses:
                 gcl_expr ... gcl_expr   |
                 gcl_expr > gcl_expr     |
                 gcl_expr < gcl_expr     |
+                gcl_expr /> gcl_expr    |
+                gcl_expr /< gcl_expr    |
                 [ INT ]                 |
                 INT                     |
                 phrase

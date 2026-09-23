@@ -9,6 +9,8 @@ tokens = (
     'OP_BOUNDED_BY',
     'OP_CONTAINING',
     'OP_CONTAINED_IN',
+    'OP_NOT_CONTAINING',
+    'OP_NOT_CONTAINED_IN',
     'OP_START_PROJECTION',
     'OP_END_PROJECTION',
     'COMMA',
@@ -27,6 +29,8 @@ t_OP_OR                 = r'\+'
 t_OP_BOUNDED_BY         = r'\.\.\.?'
 t_OP_CONTAINING         = r'>'
 t_OP_CONTAINED_IN       = r'<'
+t_OP_NOT_CONTAINING     = r'/>'
+t_OP_NOT_CONTAINED_IN   = r'/<'
 t_OP_START_PROJECTION   = r'\_\{'
 t_OP_END_PROJECTION     = r'\}\_'
 t_COMMA                 = r','
