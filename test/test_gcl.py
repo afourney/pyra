@@ -37,7 +37,7 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual( query._last_ending_at_or_before(7),  (6,6) )
 
 
-    def test_single_token(self):
+    def test_bounded_by(self):
         corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"
                 #   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
         tokens  = corpus.split()
@@ -58,6 +58,12 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual( query._first_ending_at_or_after(10),  (6,10) )
         self.assertEqual( query._first_ending_at_or_after(11),  (INF,INF) )
 
+
+    def test_unicode_phrase(self):
+        tokens = ["caf\u00e9", "\u8336", "caf\u00e9", "\u8336"]
+        g = GCL(InvertedIndex(tokens))
+        query = g.parse('"caf\u00e9", "\u8336"')
+        self.assertEqual(list(query), [slice(0, 2), slice(2, 4)])
 
     def test_containing(self):
         corpus  = "00 10 10 10 20 10 30 10 40 10 50 10 60 10 70 10 80 10 90 00"

@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import gzip
 import re
 import sys
 import traceback
+from pathlib import Path
 from pyra import InvertedIndex, GCL
 
 def main():
@@ -18,19 +19,19 @@ def main():
     print("Loading Shakespeare XML corpus...")
 
     corpus = []
-    f = gzip.open('shakespeare.xml.gz', 'r')
-    for line in f:
+    corpus_path = Path(__file__).with_name('shakespeare.xml.gz')
+    with gzip.open(corpus_path, 'rt', encoding='utf-8') as f:
+        for line in f:
 
-        # Skip blank line
-        if re.match(r'^\s*$', line):
-            continue
+            # Skip blank line
+            if re.match(r'^\s*$', line):
+                continue
 
-        # Tokenize
-        line = re.sub(r'<', ' <', line.lower().strip())
-        line = re.sub(r'>', '> ', line)
-        tokens = re.split(r'[^\w\/<>]+', line.strip())
-        corpus.extend(tokens)
-    f.close()
+            # Tokenize
+            line = re.sub(r'<', ' <', line.lower().strip())
+            line = re.sub(r'>', '> ', line)
+            tokens = re.split(r'[^\w\/<>]+', line.strip())
+            corpus.extend(tokens)
 
     # Index the corpus
     print("Indexing corpus...")
@@ -94,7 +95,7 @@ Press Ctl-D to exit.
                 # Handle long lines
                 if len(res) > 80:
                     res = res[0:76] + "..."
-                print res
+                print(res)
 
         except Exception:
             print(traceback.format_exc())

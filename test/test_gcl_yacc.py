@@ -11,5 +11,8 @@ class TestGclLex(unittest.TestCase):
         expr = '123 .. 456 > "hello"'
         results = gcl_yacc_parse(expr)
 
-        # TODO run some tests
-        # self.assertEqual( result, expected )
+        self.assertEqual(results, (
+            'Containing',
+            ('BoundedBy', ('Position', 123), ('Position', 456)),
+            ('Phrase', 'hello'),
+        ))

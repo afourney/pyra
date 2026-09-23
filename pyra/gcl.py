@@ -1,13 +1,9 @@
 #!/usr/bin/python
 
 ###### BEGIN -- CAREFULLY IMPORT PARSING SUPPORT #####
-_parsing_support_loaded = False
-import imp
-try:
-    imp.find_module('ply')
-    _parsing_support_loaded = True
-except ImportError:
-    pass
+from importlib.util import find_spec
+
+_parsing_support_loaded = find_spec('ply') is not None
 
 if _parsing_support_loaded:
     from .gcl_yacc import gcl_yacc_parse
@@ -87,7 +83,7 @@ class GCL(object):
             return self.__parse_helper( tree, args )
         else:
             raise NotImplementedError("GCL parsing requires the 'ply' module. "
-                                      "Ply can be installed from pip or easy_install. "
+                                      "PLY can be installed with 'python -m pip install ply'. "
                                       "Alternatively, just manually create GCL expressions "
                                       "using the GCL factory methods. ")
 

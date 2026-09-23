@@ -11,5 +11,8 @@ class TestGclLex(unittest.TestCase):
         expr = '123 ... 456'
         results = gcl_lex(expr)
 
-        # TODO run some tests
-        # self.assertEqual( result, expected )
+        self.assertEqual(results, [
+            ("'INT'", "123"),
+            ("'OP_BOUNDED_BY'", "'...'"),
+            ("'INT'", "456"),
+        ])
