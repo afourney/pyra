@@ -59,10 +59,10 @@ class GCL(object):
         return ContainedInOperator(self.__idx, a, b)
 
     def NotContaining( self, a, b ):
-        raise NotImplementedError()
+        return NotContainingOperator(self.__idx, a, b)
 
     def NotContainedIn( self, a, b ):
-        raise NotImplementedError()
+        return NotContainedInOperator(self.__idx, a, b)
 
     #
     # Unary operators
@@ -257,10 +257,10 @@ class PhraseGenerator(GCListGenerator):
         return self.__next_phrase(self.__phrase, k - len(self.__phrase))
 
     def _last_ending_at_or_before(self, k):
-        return self.__prev_phrase(self.__phrase, k - len(self.__phrase) + 2)
+        return self.__prev_phrase(self.__phrase,k+1)
 
     def _last_starting_at_or_before(self, k):
-        return self.__prev_phrase(self.__phrase,k+1)
+        return self.__prev_phrase(self.__phrase, k + len(self.__phrase))
 
     # Helper methods for phrases
     def __next_phrase(self, tokens, position):
@@ -400,11 +400,11 @@ class AndOperator(GCListGenerator):
 
         u0,v0 = a._last_ending_at_or_before(max(va,vb))
         if u0 == -INF or v0 == -INF:
-            return (-INF,-INF)
+            return (INF,INF)
 
         u1,v1 = b._last_ending_at_or_before(max(va,vb))
         if u1 == -INF or v1 == -INF:
-            return (-INF,-INF)
+            return (INF,INF)
 
         return (min(u0,u1), max(v0,v1))
         
@@ -420,13 +420,32 @@ class AndOperator(GCListGenerator):
     def _last_ending_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        ua,va = a._last_ending_at_or_before(k)
+        if ua == -INF or va == -INF:
+            return (-INF,-INF)
+
+        ub,vb = b._last_ending_at_or_before(k)
+        if ub == -INF or vb == -INF:
+            return (-INF,-INF)
+
+        u0,v0 = a._first_starting_at_or_after(min(ua,ub))
+        if u0 == INF or v0 == INF:
+            return (-INF,-INF)
+
+        u1,v1 = b._first_starting_at_or_after(min(ua,ub))
+        if u1 == INF or v1 == INF:
+            return (-INF,-INF)
+
+        return (min(u0,u1), max(v0,v1))
 
 
     def _last_starting_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u,v = self._first_starting_at_or_after(k+1)
+        return self._last_ending_at_or_before(v-1)
 
 
 class OrOperator(GCListGenerator):
@@ -443,12 +462,7 @@ class OrOperator(GCListGenerator):
     
         # Implementation from journal paper
         ua,va = a._first_starting_at_or_after(k)
-        if ua == INF or va == INF:
-            return (INF,INF)
-
         ub,vb = b._first_starting_at_or_after(k)
-        if ub == INF or vb == INF:
-            return (INF,INF)
 
         if va < vb:
             return (ua, va)
@@ -473,12 +487,7 @@ class OrOperator(GCListGenerator):
 
         # My implementation
         ua,va = a._last_ending_at_or_before(k)
-        if ua == -INF or va == -INF:
-            return (-INF,-INF)
-
         ub,vb = b._last_ending_at_or_before(k)
-        if ub == -INF or vb == -INF:
-            return (-INF,-INF)
 
         if ua > ub:
             return (ua, va)
@@ -491,7 +500,9 @@ class OrOperator(GCListGenerator):
     def _last_starting_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u,v = self._first_starting_at_or_after(k+1)
+        return self._last_ending_at_or_before(v-1)
 
 
 class BoundedByOperator(GCListGenerator):
@@ -532,12 +543,12 @@ class BoundedByOperator(GCListGenerator):
         b = self.__b
 
         u0,v0 = b._last_ending_at_or_before(k)
-        if u0 == INF or v0 == INF:
-            return (INF,INF)
+        if u0 == -INF or v0 == -INF:
+            return (-INF,-INF)
 
         u1,v1 = a._last_ending_at_or_before(u0-1)
-        if u1 == INF or v1 == INF:
-            return (INF,INF)
+        if u1 == -INF or v1 == -INF:
+            return (-INF,-INF)
 
         u2,v2 = b._first_starting_at_or_after(v1+1)
         return (u1,v2)
@@ -546,7 +557,9 @@ class BoundedByOperator(GCListGenerator):
     def _last_starting_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u,v = self._first_starting_at_or_after(k+1)
+        return self._last_ending_at_or_before(v-1)
 
 
 class ContainingOperator(GCListGenerator):
@@ -590,16 +603,39 @@ class ContainingOperator(GCListGenerator):
                 # Keep looking
                 k = v1
 
+        return (INF,INF)
+
 
     def _last_ending_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u,v = a._last_ending_at_or_before(k)
+        if u == -INF or v == -INF:
+            return (-INF,-INF)
+
+        return self._last_starting_at_or_before(u)
 
     def _last_starting_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        while k > -INF:
+            u0,v0 = a._last_starting_at_or_before(k)
+            if u0 == -INF or v0 == -INF:
+                return (-INF,-INF)
+
+            u1,v1 = b._last_ending_at_or_before(v0)
+            if u1 == -INF or v1 == -INF:
+                return (-INF,-INF)
+
+            if u1 >= u0:
+                return (u0,v0)
+            else:
+                # Keep looking
+                k = u1
+
+        return (-INF,-INF)
 
 
 class ContainedInOperator(GCListGenerator):
@@ -614,9 +650,6 @@ class ContainedInOperator(GCListGenerator):
         b = self.__b
 
         while k < INF:
-            if k == INF:
-                return (INF, INF)
-
             u0,v0 = a._first_starting_at_or_after(k)
 
             if u0 == INF or v0 == INF:
@@ -632,42 +665,175 @@ class ContainedInOperator(GCListGenerator):
             else:
                 # Keep looking
                 k = u1
+
+        return (INF, INF)
         
 
     def _first_ending_at_or_after(self, k):
         a = self.__a
         b = self.__b
 
-        while k < INF:
-            if k == INF:
-                return (INF, INF)
+        u,v = a._first_ending_at_or_after(k)
+        if u == INF or v == INF:
+            return (INF,INF)
 
-            u0,v0 = a._first_ending_at_or_after(k)
+        return self._first_starting_at_or_after(u)
 
-            if u0 == INF or v0 == INF:
-                return (INF, INF)
-
-            u1,v1 = b._first_ending_at_or_after(v0)
-
-            if u1 == INF or v1 == INF:
-                return (INF, INF)
-
-            if u1 <= u0:
-                return (u0,v0)
-            else:
-                # Keep looking
-                k = u1
- 
 
     def _last_ending_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        while k > -INF:
+            u0,v0 = a._last_ending_at_or_before(k)
+            if u0 == -INF or v0 == -INF:
+                return (-INF,-INF)
+
+            u1,v1 = b._last_starting_at_or_before(u0)
+            if u1 == -INF or v1 == -INF:
+                return (-INF,-INF)
+
+            if v1 >= v0:
+                return (u0,v0)
+            else:
+                # Keep looking
+                k = v1
+
+        return (-INF,-INF)
 
     def _last_starting_at_or_before(self, k):
         a = self.__a
         b = self.__b
-        raise NotImplementedError()
+
+        u,v = a._last_starting_at_or_before(k)
+        if u == -INF or v == -INF:
+            return (-INF,-INF)
+
+        return self._last_ending_at_or_before(v)
+
+
+class NotContainingOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a, b):
+        super(NotContainingOperator, self).__init__(inverted_index)
+        self.__a = a
+        self.__b = b
+
+    def _first_starting_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        u,v = a._first_starting_at_or_after(k)
+        if u == INF or v == INF:
+            return (INF,INF)
+
+        return self._first_ending_at_or_after(v)
+
+
+    def _first_ending_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        u0,v0 = a._first_ending_at_or_after(k)
+        while u0 < INF and v0 < INF:
+            u1,v1 = b._first_starting_at_or_after(u0)
+
+            if v1 > v0:
+                return (u0,v0)
+            else:
+                # Skip extents that also contain this occurrence of B.
+                u0,v0 = a._first_starting_at_or_after(u1+1)
+
+        return (INF,INF)
+
+
+    def _last_ending_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+
+        u,v = a._last_ending_at_or_before(k)
+        if u == -INF or v == -INF:
+            return (-INF,-INF)
+
+        return self._last_starting_at_or_before(u)
+
+    def _last_starting_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+
+        u0,v0 = a._last_starting_at_or_before(k)
+        while u0 > -INF and v0 > -INF:
+            u1,v1 = b._last_ending_at_or_before(v0)
+
+            if u1 < u0:
+                return (u0,v0)
+            else:
+                # Skip extents that also contain this occurrence of B.
+                u0,v0 = a._last_ending_at_or_before(v1-1)
+
+        return (-INF,-INF)
+
+
+class NotContainedInOperator(GCListGenerator):
+
+    def __init__(self, inverted_index, a, b):
+        super(NotContainedInOperator, self).__init__(inverted_index)
+        self.__a = a
+        self.__b = b
+
+    def _first_starting_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        u0,v0 = a._first_starting_at_or_after(k)
+        while u0 < INF and v0 < INF:
+            u1,v1 = b._first_ending_at_or_after(v0)
+
+            if u1 > u0:
+                return (u0,v0)
+            else:
+                # Skip extents that are also contained in this occurrence of B.
+                u0,v0 = a._first_ending_at_or_after(v1+1)
+
+        return (INF,INF)
+
+
+    def _first_ending_at_or_after(self, k):
+        a = self.__a
+        b = self.__b
+
+        u,v = a._first_ending_at_or_after(k)
+        if u == INF or v == INF:
+            return (INF,INF)
+
+        return self._first_starting_at_or_after(u)
+
+
+    def _last_ending_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+
+        u0,v0 = a._last_ending_at_or_before(k)
+        while u0 > -INF and v0 > -INF:
+            u1,v1 = b._last_starting_at_or_before(u0)
+
+            if v1 < v0:
+                return (u0,v0)
+            else:
+                # Skip extents that are also contained in this occurrence of B.
+                u0,v0 = a._last_starting_at_or_before(u1-1)
+
+        return (-INF,-INF)
+
+    def _last_starting_at_or_before(self, k):
+        a = self.__a
+        b = self.__b
+
+        u,v = a._last_starting_at_or_before(k)
+        if u == -INF or v == -INF:
+            return (-INF,-INF)
+
+        return self._last_ending_at_or_before(v)
 
 
 class StartOperator(GCListGenerator):

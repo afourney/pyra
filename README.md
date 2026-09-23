@@ -60,16 +60,13 @@ Our region algebra consists of the following elements:
     A .. B              Returns all extents that start with A and end with B
     A > B               Returns all extents that match A and contain an extent matching B 
     A < B               Returns all extents that match A, contained in an extent matching B
+    A /> B              Returns all extents that match A but do not contain an extent matching B
+    A /< B              Returns all extents that match A, not contained in an extent matching B
 
     _{A}                The 'start' projection. For each extent (u,v) in A, return (u,u)
     {A}_                The 'end' projection. For each extent (u,v) in A, return (v,v)
 
     [N]                 Returns all extents of length N, where N is an integer (basically a sliding window)
-
-    Not yet implemented:
-    A /> B              Returns all extents that match A but do not contain an extent matching B
-    A /< B              Returns all extents that match A, not contained in an extent matching B
-
 
 ### Examples
 
@@ -193,6 +190,8 @@ Here is a simplified sketch of the grammar pyra uses:
                 gcl_expr ... gcl_expr   |
                 gcl_expr > gcl_expr     |
                 gcl_expr < gcl_expr     |
+                gcl_expr /> gcl_expr    |
+                gcl_expr /< gcl_expr    |
                 [ INT ]                 |
                 INT                     |
                 phrase

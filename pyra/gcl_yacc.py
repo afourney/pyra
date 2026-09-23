@@ -3,7 +3,8 @@ from ply import *
 from .gcl_lex import tokens
 
 precedence = (
-    ('left','OP_BOUNDED_BY','OP_CONTAINING','OP_CONTAINED_IN'),
+    ('left','OP_BOUNDED_BY','OP_CONTAINING','OP_CONTAINED_IN',
+            'OP_NOT_CONTAINING','OP_NOT_CONTAINED_IN'),
     ('left','OP_AND','OP_OR'),
     ('left','OP_START_PROJECTION', 'OP_END_PROJECTION'),
     ('left','COMMA'),
@@ -40,6 +41,14 @@ def p_gcl_containing(t):
 def p_gcl_contained_in(t):
     'gcl_expr : gcl_expr OP_CONTAINED_IN gcl_expr'
     t[0] = ('ContainedIn', t[1], t[3])
+
+def p_gcl_not_containing(t):
+    'gcl_expr : gcl_expr OP_NOT_CONTAINING gcl_expr'
+    t[0] = ('NotContaining', t[1], t[3])
+
+def p_gcl_not_contained_in(t):
+    'gcl_expr : gcl_expr OP_NOT_CONTAINED_IN gcl_expr'
+    t[0] = ('NotContainedIn', t[1], t[3])
 
 def p_gcl_length(t):
     'gcl_expr : LSPAREN INT RSPAREN'
