@@ -181,6 +181,50 @@ for region in gcl.parse(
     print(f"{region}\t{' '.join(corpus[region])}")
 ```
 
+### Source checkpoints
+
+`InvertedIndex` accepts an iterable of plain terms or `(term, source_offset)`
+pairs, where `term` is a string and `source_offset` is an integer such as
+the term's character offset in a string, or byte offset in a file. These offsets
+are used to support checkpointing, which facilitates efficient passage retrieval
+later. Specifically, `checkpoint(position)` returns the nearest retained
+checkpoint at or before the requested token position as
+`(checkpoint_token_position, source_offset)`.
+
+For illustration, suppose checkpoints occur every three tokens. Given this input:
+
+```python
+index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170), ("world", 210)])
+```
+
+The illustrative three-token interval would give:
+
+| Call | Result |
+| --- | --- |
+| `index.checkpoint(0)` | `(0, 100)` |
+| `index.checkpoint(1)` | `(0, 100)` |
+| `index.checkpoint(2)` | `(0, 100)` |
+| `index.checkpoint(3)` | `(3, 210)` |
+
+In this example, the second and third tokens (indices 1 and 2) *start* somewhere between
+offsets 100 and 209 inclusive. The fourth token starts at offset 210. To retrieve
+the source substring containing the second and third tokens, one would begin
+tokenizing from offset 100, skip the first token, then retain the substring from
+the start of the second token through the end of the third. For this example,
+using character offsets and the original token text, that substring would be
+`source[120:175]`.
+
+For plain terms, `checkpoint(position)` returns `(position, position)` without
+storing checkpoint entries.
+
+Source offsets are opaque, nondecreasing integers: they may be bytes, characters,
+or another source-defined coordinate.
+
+Positions from zero through `corpus_length` are accepted. At `corpus_length`, an
+explicit-offset index returns its last checkpoint, not an inferred EOF offset.
+An empty index returns `(0, 0)` for `checkpoint(0)`. Invalid position types raise
+`TypeError`; out-of-range positions raise `IndexError`.
+
 ### Ply Grammar
 
 This package uses ply python module to parse the GCL expressions.

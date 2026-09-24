@@ -2,17 +2,47 @@ from .util import galloping_search
 from itertools import islice
 
 INF = float('inf')
+_CHECKPOINT_STRIDE = 256
 
 class InvertedIndex(object):
+    """Index plain terms or (string term, integer source offset) pairs.
+
+    Input is consumed once and must not mix the two forms. Source offsets
+    must be nondecreasing; they are opaque integers, independent of the
+    consecutive token positions stored in postings. Two-element tuples
+    beginning with a string are reserved for the source-offset form.
+    """
 
     def __init__(self, tokens):
         self.__postings = {}
         self.__corpus_length = 0
         self.__next_cache = {}
         self.__prev_cache = {}
+        self.__has_offsets = False
+        self.__checkpoint_offsets = None
+        previous_offset = None
 
         for t in tokens:
             position = self.__corpus_length
+            has_offset = (isinstance(t, tuple) and len(t) == 2
+                          and isinstance(t[0], str))
+            if position == 0:
+                self.__has_offsets = has_offset
+                if has_offset:
+                    self.__checkpoint_offsets = []
+            elif has_offset != self.__has_offsets:
+                raise ValueError("cannot mix plain terms and terms with source offsets")
+
+            if has_offset:
+                t, offset = t
+                if not isinstance(offset, int) or isinstance(offset, bool):
+                    raise TypeError("source offsets must be integers (not booleans)")
+                if previous_offset is not None and offset < previous_offset:
+                    raise ValueError("source offsets must be nondecreasing")
+                previous_offset = offset
+                if position % _CHECKPOINT_STRIDE == 0:
+                    self.__checkpoint_offsets.append(offset)
+
             if t not in self.__postings:
                 self.__postings[t] = []
                 self.__next_cache[t] = 0
@@ -51,6 +81,30 @@ class InvertedIndex(object):
     # Convenience methods that are never called when 
     # processing region algebra queries
     #
+
+    def checkpoint(self, position: int) -> tuple[int, int]:
+        """Return the nearest checkpoint at or before a token position.
+
+        The returned pair is (checkpoint_token_position, source_offset).
+        Plain terms return (position, position) without storing checkpoints.
+
+        The inclusive range 0 <= position <= corpus_length is valid. At the
+        end boundary, explicit-offset input returns its last checkpoint.
+        An empty index returns (0, 0) for position 0.
+
+        Raise TypeError for non-integers (including booleans), or IndexError
+        for positions outside the valid range.
+        """
+        if not isinstance(position, int) or isinstance(position, bool):
+            raise TypeError("checkpoint position must be an integer (not a boolean)")
+        if position < 0 or position > self.__corpus_length:
+            raise IndexError("checkpoint position outside the corpus")
+        if not self.__has_offsets:
+            return (position, position)
+
+        i = min(position // _CHECKPOINT_STRIDE, len(self.__checkpoint_offsets) - 1)
+        return (i * _CHECKPOINT_STRIDE, self.__checkpoint_offsets[i])
+
 
     def first(self, term):
         return self.next(term, -INF)
