@@ -60,7 +60,7 @@ class InvertedIndex(object):
         return self.prev(term, INF)
 
 
-    def frequency(self, term, start=-INF, end=-INF):
+    def frequency(self, term, start=-INF, end=INF):
         # Returns the frequency of the term between the
         # start and end positions (inclusive)
 

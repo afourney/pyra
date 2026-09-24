@@ -22,6 +22,8 @@ class TestInvertedIndex(unittest.TestCase):
         self.assertEqual(iidx.prev('cat', 12),                             -INF)
         self.assertEqual(iidx.first('fox'),                                 3)
         self.assertEqual(iidx.last('fox'),                                  3)
+        self.assertEqual(iidx.frequency('dog'), 2)
+        self.assertEqual(iidx.frequency('cat'), 0)
         self.assertEqual(iidx.frequency('dog', -INF, INF),             2)
         self.assertEqual(iidx.frequency('dog', -INF, 9),               1)
         self.assertEqual(iidx.frequency('dog', -INF, 8),               1)
