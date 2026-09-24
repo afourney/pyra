@@ -2,14 +2,14 @@ pyra - Python Region Algebra
 ============================
 
 
-Pyra is a python implementation of the region algebra and query language described in [1]. 
+Pyra is a Python implementation of the region algebra and query language described in [1].
 Region algebras are used to efficiently query semi-structured text documents. This particular
 region algebra operates on Generalized Concordance Lists (GCLs). GCLs are lists of regions
 (a.k.a., extents), which obey the following constraint: *No region in the list may have another
-region from the same lists nested within it*. For a quick online introduction to this region
+region from the same list nested within it*. For a quick online introduction to this region
 algebra, and why it is useful, visit:
 
-[Wumpus Search](http://www.wumpus-search.org/docs/gcl.html) 
+[Wumpus Search](http://www.wumpus-search.org/docs/gcl.html)
 
 In general, this region algebra is good for extracting data from documents that have lightweight
 structure, and is an alternative to more heavyweight solutions like XPath queries.
@@ -24,8 +24,7 @@ python3 -m venv .venv
 python -m pip install .
 ```
 
-Installation includes PLY 3.11 for parsing query strings. The existing query
-language and Python API are unchanged.
+Installation includes PLY 3.11 for parsing query strings.
 
 Run the interactive Shakespeare example or the tests from the repository root:
 
@@ -33,40 +32,6 @@ Run the interactive Shakespeare example or the tests from the repository root:
 python examples/gcl_shell.py
 python -m unittest discover -s test -v
 ```
-
-### Development
-
-Install the development tools with [uv](https://docs.astral.sh/uv/):
-
-```sh
-uv sync --locked
-uv run poe lint        # Check Ruff lint rules
-uv run poe format-fix  # Apply Ruff formatting
-uv run poe test        # Run the unittest suite
-uv run poe typecheck   # Run strict Pyright checks
-uv run poe check-all   # Check formatting, lint, spelling, types, and tests
-```
-
-`uv run poe format` checks formatting without changing files, `poe lint-fix`
-applies automatic lint fixes, and `poe spell` checks source and documentation
-spelling. The test fixtures and bundled Shakespeare corpus are excluded from
-spelling checks.
-
-Ruff requires function annotations (`ANN`), and Pyright checks the library and
-interactive example in strict mode. Tests retain the regular lint and formatting
-checks but are excluded from Pyright and `ANN`, since they include deliberately
-invalid inputs. `poe check` and `poe check-all` both include type checking.
-
-The `typings/ply/` directory contains small development stubs for the PLY APIs
-used here. PLY token and production values are dynamic; the rest of the library
-uses concrete annotations. Distributions include `py.typed` so downstream type
-checkers can use Pyra's annotations.
-
-GitHub Actions runs the suite on Python 3.11, 3.12, 3.13, and 3.14 for every
-pull request and push to `master`. CI runs `poe check-all` after installing the
-package with uv in non-editable mode. Tests run in isolated mode (`python -I`)
-to exercise the installed library.
-
 
 ### Algebra and Query Language
 
@@ -97,8 +62,9 @@ Our region algebra consists of the following elements:
 
 ### Examples
 
-Suppose we have an XML document containing the complete works of Shakespeare (see './examples').
-We can then run the following queries using pyra:
+The interactive example in `examples/gcl_shell.py` tokenizes the bundled Shakespeare
+XML corpus, preserving tags as tokens. With that tokenization, we can run the
+following queries using Pyra:
 
 **Return the titles of all plays, acts, scenes, etc.**
 
@@ -135,7 +101,7 @@ We can then run the following queries using pyra:
     ... And, many more ...
 
 
-**Return the titles of all plays containing the word 'henry'**
+**Return all play titles containing the word 'henry'**
 
     (("<title>".."</title>") < ("<play>".."</title>")) > "henry"  
 
@@ -148,7 +114,7 @@ We can then run the following queries using pyra:
     slice(505920,505932):        <title> the famous history of the life of henry the ei...
 
 
-**Return short play titles (4 or few words)**
+**Return short play titles (4 or fewer words)**
 **(Note: We have to include the tags in the token count)**
 
     (("<title>".."</title>") < ("<play>".."</title>")) < [6] 
@@ -167,7 +133,7 @@ We can then run the following queries using pyra:
     slice(1233968,1233974):      <title> the winter s tale </title>
 
 
-**Return the title of all plays containing the phrase 'to be or not to be'**
+**Return the titles of all plays containing the phrase 'to be or not to be'**
 
     (("<title>".."</title>") < ("<play>".."</title>")) < (("<play>".."</play>") > ("to", "be", "or", "not", "to", "be"))
 
@@ -176,62 +142,97 @@ We can then run the following queries using pyra:
 
 ### Code Examples
 
-So how do you actually write code that uses or calls *pyra*?
-
-Here's an example implementation of the above queries:
-
-```python
-from pyra import InvertedIndex, GCL
-
-# Replace this sample with tokenized Shakespeare text; see examples/gcl_shell.py.
-corpus = "<play> <title> macbeth </title> witch duncan </play>".split()
-gcl = GCL(InvertedIndex(corpus))
-
-# Print titles of acts, plays, scenes, etc.
-for region in gcl.parse('"<title>".."</title>"'):
-    print(f"{region}\t{' '.join(corpus[region])}")
-
-# Print titles of plays.
-play_titles = gcl.parse('("<title>".."</title>") < ("<play>".."</title>")')
-for region in play_titles:
-    print(f"{region}\t{' '.join(corpus[region])}")
-
-# Use parameterization to reuse an expression.
-for region in gcl.parse('%1 > "henry"', play_titles):
-    print(f"{region}\t{' '.join(corpus[region])}")
-
-# Return the titles of plays mentioning both 'witch' and 'duncan'.
-whole_plays = gcl.parse('"<play>".."</play>"')
-for region in gcl.parse(
-    '%1 < (%2 > ("witch" ^ "duncan"))', play_titles, whole_plays
-):
-    print(f"{region}\t{' '.join(corpus[region])}")
-```
-
-### Source checkpoints
-
-`InvertedIndex` accepts an iterable of plain terms or `(term, source_offset)`
-pairs, where `term` is a string and `source_offset` is an integer such as
-the term's character offset in a string, or byte offset in a file. These offsets
-are used to support checkpointing, which facilitates efficient passage retrieval
-later. Specifically, `checkpoint(position)` returns the nearest retained
-checkpoint at or before the requested token position as
-`(checkpoint_token_position, source_offset)`.
-
-For illustration, suppose checkpoints occur every three tokens. Given this input:
+First, we need a source of tokens for our corpus. The simplest is a string,
+but we can also use a UTF-8 text file.
 
 ```python
-index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170), ("world", 210)])
+from pyra import GCL, FileTextSource, InvertedIndex, StringTextSource
+
+string_source = StringTextSource("The brown, FOX sleeps. Another brown fox runs.")
+file_source = FileTextSource("notes.txt")  # Alternative: supply your own UTF-8 file.
 ```
 
-The illustrative three-token interval would give:
+Both sources use `RegexTokenizer` by default: it matches Unicode `\w+` terms
+and case-folds them. Unlike the Shakespeare example's tokenizer, it does not
+preserve XML tags. Each iteration yields fresh `(term, source_offset)` pairs;
+string offsets count characters, while file offsets count bytes.
+
+Next, we need to build an index from the source.
+
+```python
+index = InvertedIndex(string_source)
+```
+
+Finally, we can bind a reader from the source to the index to retrieve regions
+of text that match a query. For example, to find the phrase "brown fox":
+
+```python
+reader = string_source.reader(index)
+for region in GCL(index).parse('"brown", "fox"'):
+    print(reader[region])  # "brown, FOX", then "brown fox"
+```
+
+Reader slices use token positions with exclusive stops, matching GCL results.
+They preserve the original text between the first token's start and the last
+token's end, including intervening punctuation and whitespace. Negative and
+omitted bounds and clipping follow Python slicing; empty slices return `""`.
+Only slices with a step of `1` are supported, not integer indexing.
+
+Always bind a reader to an index built from that source's positioned tokens.
+Keep the source contents and tokenizer configuration unchanged while using
+the index; rebuild after changes. There is no automatic stale-index detection.
+
+### Cover-density ranking
+
+Pyra can also rank passages by cover density. The passage-ranking implementation
+in `pyra/icover.py` uses the i-cover generation algorithm and logarithmic term-frequency
+and passage-length scoring described in [2] and [3]. For a fuller account of passage
+retrieval and answer extraction in the MultiText question-answering system, see [4].
+
+Like GCL, cover-density ranking produces exclusive-stop token slices that can
+be used with the reader above. `rank()` returns `(slice, score)` pairs in
+descending score order:
+
+```python
+from pyra import CoverDensityRanking
+
+for region, score in CoverDensityRanking(index).rank(["brown", "fox"]):
+    print(score, reader[region])
+```
+
+For unranked covers, `iCovers(i, query)` yields dictionaries with `"slice"` and
+`"terms"` fields. The `"slice"` field replaces the earlier inclusive `"extent"`
+tuple: use `reader[cover["slice"]]` or `tokens[cover["slice"]]` rather than
+`tokens[start:end + 1]`.
+
+### Index checkpoints
+
+The index deals with tokens, but downstream users likely want to retrieve original passages
+without normalizing or otherwise altering the original text. `InvertedIndex` supports
+token offset checkpointing. When building an index, `InvertedIndex` accepts an iterable
+of plain terms or `(term, source_offset)` pairs, where `term` is a string and `source_offset`
+is an integer such as the term's character offset in a string, or byte offset in a file.
+These offsets are used to support checkpointing, which facilitates efficient passage retrieval
+later. Specifically, `checkpoint(position)` returns the nearest retained checkpoint at or
+before the requested token position as `(checkpoint_token_position, source_offset)`.
+
+For illustration, suppose checkpoints are retained every three tokens, starting
+at token zero (the actual implementation currently uses a stride of 256). Given this input:
+
+```python
+checkpoint_index = InvertedIndex(
+    [("hello", 100), ("world", 120), ("hello", 170), ("world", 210)]
+)
+```
+
+With the illustrative three-token stride, the results would be:
 
 | Call | Result |
 | --- | --- |
-| `index.checkpoint(0)` | `(0, 100)` |
-| `index.checkpoint(1)` | `(0, 100)` |
-| `index.checkpoint(2)` | `(0, 100)` |
-| `index.checkpoint(3)` | `(3, 210)` |
+| `checkpoint_index.checkpoint(0)` | `(0, 100)` |
+| `checkpoint_index.checkpoint(1)` | `(0, 100)` |
+| `checkpoint_index.checkpoint(2)` | `(0, 100)` |
+| `checkpoint_index.checkpoint(3)` | `(3, 210)` |
 
 In this example, the second and third tokens (indices 1 and 2) *start* somewhere between
 offsets 100 and 209 inclusive. The fourth token starts at offset 210. To retrieve
@@ -241,28 +242,29 @@ the start of the second token through the end of the third. For this example,
 using character offsets and the original token text, that substring would be
 `source[120:175]`.
 
-For plain terms, `checkpoint(position)` returns `(position, position)` without
-storing checkpoint entries.
+This is how `StringTextSource` and `FileTextSource` retrieve passages.
+Calling `source.reader(index)` returns a `PassageReader` that maps token slices
+to the original source text using the checkpointing mechanism described above.
 
-Source offsets are opaque, nondecreasing integers: they may be bytes, characters,
-or another source-defined coordinate.
+Source offsets must be nondecreasing integers, and plain terms and positioned
+tokens cannot be mixed in one index. For plain terms, `checkpoint(position)`
+returns `(position, position)` without storing checkpoints.
 
-Positions from zero through `corpus_length` are accepted. At `corpus_length`, an
-explicit-offset index returns its last checkpoint, not an inferred EOF offset.
-An empty index returns `(0, 0)` for `checkpoint(0)`. Invalid position types raise
-`TypeError`; out-of-range positions raise `IndexError`.
+### PLY Grammar
 
-### Ply Grammar
-
-This package uses ply python module to parse the GCL expressions.
-Here is a simplified sketch of the grammar pyra uses:
+This package uses the PLY Python module to parse GCL expressions.
+Here is a simplified sketch of the grammar Pyra uses:
 
     gcl_expr :  ( gcl_expr )            |
-                gcl_expr ... gcl_expr   |
+                gcl_expr .. gcl_expr    |
+                gcl_expr ^ gcl_expr     |
+                gcl_expr + gcl_expr     |
                 gcl_expr > gcl_expr     |
                 gcl_expr < gcl_expr     |
                 gcl_expr /> gcl_expr    |
                 gcl_expr /< gcl_expr    |
+                _{ gcl_expr }           |
+                { gcl_expr }_           |
                 [ INT ]                 |
                 INT                     |
                 phrase
@@ -270,12 +272,22 @@ Here is a simplified sketch of the grammar pyra uses:
     phrase : STRING , phrase  |
              STRING
 
-### Passage Ranking
+### Development
 
-The passage-ranking implementation in `pyra/icover.py` uses the i-cover generation
-algorithm and logarithmic term-frequency and passage-length scoring described in
-[2] and [3]. For a fuller account of passage retrieval and answer extraction in
-the MultiText question-answering system, see [4].
+Install the development tools with [uv](https://docs.astral.sh/uv/):
+
+```sh
+uv sync --locked
+uv run poe lint        # Check Ruff lint rules
+uv run poe format-fix  # Apply Ruff formatting
+uv run poe test        # Run the unittest suite
+uv run poe typecheck   # Run strict Pyright checks
+uv run poe check-all   # Check formatting, lint, spelling, types, and tests
+```
+
+GitHub Actions runs the suite on Python 3.11, 3.12, 3.13, and 3.14 for every
+pull request and push to `master`. CI runs `poe check-all` after installing the
+package with uv in non-editable mode.
 
 ### References
 

@@ -191,9 +191,6 @@ class GCListGenerator:
             return self
 
         def __next__(self) -> slice:
-            return self.next()
-
-        def next(self) -> slice:
             if self.__k == INF:
                 raise StopIteration()
 
@@ -214,9 +211,6 @@ class GCListGenerator:
             return self
 
         def __next__(self) -> slice:
-            return self.next()
-
-        def next(self) -> slice:
             if self.__k < 0:
                 raise StopIteration()
 
