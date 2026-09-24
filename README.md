@@ -184,37 +184,34 @@ for region in gcl.parse(
 ### Source checkpoints
 
 `InvertedIndex` accepts an iterable of plain terms or `(term, source_offset)`
-pairs, where `term` is a string and `source_offset` is an integer. Construction
-consumes the iterable once, so generators work. Do not mix the two input forms.
+pairs, where `term` is a string and `source_offset` is an integer such as
+the terms character offset in a string, or byte offset in a file. These offsets
+are used to support checkpointing, which facilitates efficient passage retrieval
+later.  Specifically, `checkpoint(position)` returns the nearest retained
+checkpoint at or before the requested token position as
+ `(checkpoint_token_position, source_offset)`.
+
+For examplem if checkpointing is occurs every 2 tokens, then:
 
 ```python
 index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170)])
-assert list(index.postings("hello")) == [0, 2]
 assert index.checkpoint(0) == (0, 100)
-
-plain = InvertedIndex("hello world hello".split())
-assert plain.checkpoint(2) == (2, 2)
+assert index.checkpoint(1) == (1, 100)
+assert index.checkpoint(2) == (2, 170)
 ```
 
-`checkpoint(position)` returns the nearest retained checkpoint at or before the
-requested token position as `(checkpoint_token_position, source_offset)`.
-Plain terms use an implicit identity mapping with no checkpoint entries.
-Explicit offsets are sampled sparsely; checkpoint spacing is an implementation
-detail. Postings and query results always use token coordinates.
+This means that the first two tokens occur somewhere between offsets 100 and 169,
+and the third token occurs at or after offset 170. To retieve the source substring
+containg the first two tokens, one would begin tokenizing from offset 100, and
+retain the substring up until the seconds token has been read.
 
 Source offsets are opaque, nondecreasing integers: they may be bytes, characters,
-or another source-defined coordinate. Equal, negative, and arbitrarily large
-offsets are allowed; booleans are not. The source and its reader are responsible
-for agreeing on how to resume from a checkpoint. Lookup does not access the
-source or reconstruct text.
+or another source-defined coordinate.
 
 Positions from zero through `corpus_length` are accepted. At `corpus_length`, an
 explicit-offset index returns its last checkpoint, not an inferred EOF offset.
 An empty index returns `(0, 0)` for `checkpoint(0)`. Invalid position types raise
 `TypeError`; out-of-range positions raise `IndexError`.
-
-Other hashable plain terms remain supported, except that two-element tuples
-beginning with a string are reserved for the source-offset form.
 
 ### Ply Grammar
 

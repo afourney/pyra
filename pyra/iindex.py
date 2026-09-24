@@ -85,15 +85,9 @@ class InvertedIndex(object):
     def checkpoint(self, position: int) -> tuple[int, int]:
         """Return the nearest checkpoint at or before a token position.
 
-        The pair contains a token position and an opaque source offset.
-        Plain-term input uses identity mapping and returns (position,
-        position), without storing checkpoint entries. Explicit-offset input
-        returns a retained checkpoint; its spacing is an implementation detail.
-
         The inclusive range 0 <= position <= corpus_length is valid. At the
-        end boundary, explicit-offset input returns its last checkpoint, not
-        an inferred EOF offset. An empty index returns (0, 0) for position 0.
-        No source access or tokenization is performed.
+        end boundary, explicit-offset input returns its last checkpoint.
+        An empty index returns (0, 0) for position 0.
 
         Raise TypeError for non-integers (including booleans), or IndexError
         for positions outside the valid range.
