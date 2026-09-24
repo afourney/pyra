@@ -38,17 +38,17 @@ class CoverDensityRanking:
         """Return a generator of passages covering i distinct query terms."""
         return CoverGenerator(self.__idx, i, query)
 
-    def rank(self, query: Iterable[Hashable]) -> list[tuple[Cover, float]]:
-        """Return (cover, score) pairs; each cover contains an exclusive-stop slice."""
+    def rank(self, query: Iterable[Hashable]) -> list[tuple[slice, float]]:
+        """Return (slice, score) pairs in descending score order, with exclusive stops."""
         # Deduplicate the query
         q: dict[Hashable, int] = {}
         for t in query:
             q[t] = 1
         query = q.keys()
 
-        results: list[tuple[Cover, float]] = []
+        results: list[tuple[slice, float]] = []
         for i in range(0, len(query)):
-            results.extend([(c, self.__score(c)) for c in self.iCovers(i + 1, query)])
+            results.extend([(c["slice"], self.__score(c)) for c in self.iCovers(i + 1, query)])
 
         results = sorted(results, key=lambda x: x[1], reverse=True)
         return results

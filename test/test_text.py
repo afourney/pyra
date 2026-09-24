@@ -81,13 +81,22 @@ class TestTextSources(unittest.TestCase):
                 [reader[region] for region in GCL(index).parse('"brown", "fox"')],
                 ["brown, FOX", "brown fox"],
             )
-            for cover, _score in CoverDensityRanking(index).rank(["brown", "fox"]):
-                self.assertTrue(reader[cover["slice"]])
-                if set(cover["terms"]) == {"brown", "fox"}:
-                    self.assertIn(
-                        reader[cover["slice"]],
-                        ("brown, FOX", "FOX sleeps. Another brown", "brown fox"),
-                    )
+            passages = [
+                reader[region]
+                for region, _score in CoverDensityRanking(index).rank(["brown", "fox"])
+            ]
+            self.assertCountEqual(
+                passages,
+                [
+                    "brown",
+                    "FOX",
+                    "brown",
+                    "fox",
+                    "brown, FOX",
+                    "FOX sleeps. Another brown",
+                    "brown fox",
+                ],
+            )
 
     def test_filtering_and_normalization(self):
         tokenizer = RegexTokenizer(keep=lambda term: term != "the")

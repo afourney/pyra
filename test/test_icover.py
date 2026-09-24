@@ -34,14 +34,11 @@ class TestICover(unittest.TestCase):
         results = ranker.rank(["a", "b"])
         self.assertEqual(len(results), 3)
         self.assertEqual(
-            {(cover["slice"].start, cover["slice"].stop) for cover, _ in results},
+            {(region.start, region.stop) for region, _ in results},
             {(0, 1), (1, 2), (0, 2)},
         )
-        for cover, score in results:
-            self.assertEqual(
-                set(cover["terms"]),
-                set(["a", "b", "x", "x"][cover["slice"]]),
-            )
+        for region, score in results:
+            self.assertIsInstance(region, slice)
             self.assertAlmostEqual(score, 2.0)
         self.assertEqual(ranker.rank(["a", "b", "a"]), results)
         self.assertEqual(ranker.rank([]), [])
@@ -50,7 +47,7 @@ class TestICover(unittest.TestCase):
     def test_rank_orders_by_score(self):
         ranker = CoverDensityRanking(InvertedIndex(["rare", "common", "common", "common"]))
         results = ranker.rank(["rare", "common"])
-        self.assertEqual(results[0][0]["slice"], slice(0, 1))
+        self.assertEqual(results[0][0], slice(0, 1))
         self.assertAlmostEqual(results[0][1], 2.0)
         self.assertEqual(
             [score for _, score in results], sorted((score for _, score in results), reverse=True)
@@ -75,5 +72,5 @@ class TestICover(unittest.TestCase):
 
     def test_singleton_and_empty_corpus(self):
         ranker = CoverDensityRanking(InvertedIndex(["only"]))
-        self.assertEqual(ranker.rank(["only"]), [({"slice": slice(0, 1), "terms": ["only"]}, 0.0)])
+        self.assertEqual(ranker.rank(["only"]), [(slice(0, 1), 0.0)])
         self.assertEqual(CoverDensityRanking(InvertedIndex([])).rank(["only"]), [])
