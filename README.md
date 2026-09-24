@@ -68,6 +68,72 @@ package with uv in non-editable mode. Tests run in isolated mode (`python -I`)
 to exercise the installed library.
 
 
+### Text sources and passage retrieval
+
+`StringTextSource` and `FileTextSource` are restartable iterables: each iteration
+yields a fresh sequence of `(term, source_offset)` pairs. Build the index directly
+from a source, then bind a passage reader to that index:
+
+```python
+from pyra import GCL, InvertedIndex, StringTextSource
+
+source = StringTextSource("The brown, FOX sleeps. Another brown fox runs.")
+index = InvertedIndex(source)
+reader = source.reader(index)
+
+for region in GCL(index).parse('"brown", "fox"'):
+    print(reader[region])  # "brown, FOX", then "brown fox"
+```
+
+For a file, use `FileTextSource("notes.txt")`. Files are read as UTF-8 in binary
+mode, line by line, with byte offsets and no newline translation. String sources
+use character offsets. The index treats either kind of offset as opaque.
+Each iterator opens its own file handle, so iterations are independent. An
+abandoned iterator should be closed to release its handle promptly; passage
+readers close their internal iterators automatically.
+
+Reader slices use **token positions with exclusive stops**, matching the slices
+returned by GCL. They return the original text from the first selected token's
+start through the last selected token's end, including intervening punctuation,
+whitespace, and filtered tokens. Leading/trailing material outside those token
+spans is not included, even for `reader[:]`. Negative and omitted bounds and
+out-of-range clipping follow Python slicing. Empty slices return `""`; integer
+indexing and slice strides other than `1` are not supported.
+
+Cover-density results contain **inclusive** extents instead: convert `(start, end)`
+to `reader[start:end + 1]`.
+
+The default `RegexTokenizer` matches Unicode `\w+` terms and case-folds them.
+Configure matching, normalization, and filtering without changing source spans:
+
+```python
+from pyra import FileTextSource, RegexTokenizer
+
+tokenizer = RegexTokenizer(normalize=str.casefold, keep=lambda term: term != "the")
+source = FileTextSource("notes.txt", tokenizer=tokenizer)
+```
+
+Custom `Tokenizer` implementations are callables yielding `Token(term, start, stop)`
+objects with ordered, nonoverlapping, nonempty character spans within the supplied
+line. Tokenization is line-oriented (LF boundaries; matches cannot span lines) and
+must be deterministic. Checkpoint resumes retain the original containing line,
+including context needed by regex anchors or lookbehind. File processing requires
+memory proportional to the longest line, not the entire file.
+
+`TextSource` is a structural protocol for positioned iteration, source-span
+iteration (`spans`), raw source-range reads (`read`), and reader binding (`reader`).
+`PassageReader` only requires the index's `corpus_length` and `checkpoint()` methods,
+described by the separate `CheckpointIndex` protocol. It resumes at a retained
+checkpoint and scans forward to the requested token range; the index never owns
+or reads source text.
+
+Always bind a reader to an index built from **that source's positioned tokens**.
+Keep the source contents and tokenizer configuration unchanged while using the
+index; rebuild after changes. There is no automatic checksum or stale-index
+detection (truncated passages raise an error, but other changes may not).
+One-shot input streams, persistent indexes, and multi-file corpora are not provided
+by these source classes.
+
 ### Algebra and Query Language
 
 Our region algebra consists of the following elements:
