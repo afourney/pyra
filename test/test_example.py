@@ -1,9 +1,9 @@
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 
 class TestExample(unittest.TestCase):
@@ -29,11 +29,8 @@ class TestExample(unittest.TestCase):
             )
         self.assertNotIn("Traceback", result.stdout)
         self.assertEqual(result.stderr, "")
-        matches = [
-            line for line in result.stdout.splitlines()
-            if line.startswith("slice(")
-        ]
-        self.assertEqual(matches, [
-            "slice(239304,239313):\t"
-            "<title> the tragedy of hamlet prince of denmark </title>"
-        ])
+        matches = [line for line in result.stdout.splitlines() if line.startswith("slice(")]
+        self.assertEqual(
+            matches,
+            [("slice(239304,239313):\t<title> the tragedy of hamlet prince of denmark </title>")],
+        )

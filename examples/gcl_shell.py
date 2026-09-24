@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
+"""Run an interactive GCL shell over the bundled Shakespeare corpus."""
+
 import gzip
 import re
 import sys
 import traceback
 from pathlib import Path
-from pyra import InvertedIndex, GCL
+
+from pyra import GCL, InvertedIndex
+
 
 def main():
-
+    """Index Shakespeare and evaluate queries read from standard input."""
     # Uber-dangerous
-    sys.setrecursionlimit(sys.getrecursionlimit() * 10) # 10 times the space to play
+    sys.setrecursionlimit(sys.getrecursionlimit() * 10)  # 10 times the space to play
 
-    # Load the complete works of Shakespeare, and 
+    # Load the complete works of Shakespeare, and
     # do some trivial tokenization. It works for this
     # corpus, but I would NOT advise its use for
     # other XML documents
@@ -19,18 +23,17 @@ def main():
     print("Loading Shakespeare XML corpus...")
 
     corpus = []
-    corpus_path = Path(__file__).with_name('shakespeare.xml.gz')
-    with gzip.open(corpus_path, 'rt', encoding='utf-8') as f:
+    corpus_path = Path(__file__).with_name("shakespeare.xml.gz")
+    with gzip.open(corpus_path, "rt", encoding="utf-8") as f:
         for line in f:
-
             # Skip blank line
-            if re.match(r'^\s*$', line):
+            if re.match(r"^\s*$", line):
                 continue
 
             # Tokenize
-            line = re.sub(r'<', ' <', line.lower().strip())
-            line = re.sub(r'>', '> ', line)
-            tokens = re.split(r'[^\w\/<>]+', line.strip())
+            line = re.sub(r"<", " <", line.lower().strip())
+            line = re.sub(r">", "> ", line)
+            tokens = re.split(r"[^\w\/<>]+", line.strip())
             corpus.extend(tokens)
 
     # Index the corpus
@@ -49,55 +52,54 @@ Example queries:
 
     Return the titles of all plays, acts, scenes, etc.
 
-        "<title>".."</title>"         
+        "<title>".."</title>"
 
     Return the titles of all plays
     (i.e., the first title found in the play)
 
-        ("<title>".."</title>") < ("<play>".."</title>")         
+        ("<title>".."</title>") < ("<play>".."</title>")
 
     Return the titles of all plays containing the word 'henry'
 
-        (("<title>".."</title>") < ("<play>".."</title>")) > "henry"         
+        (("<title>".."</title>") < ("<play>".."</title>")) > "henry"
 
     Return short play titles (3 or few words)
     (Note: We have to include the tags in the token count)
 
-        (("<title>".."</title>") < ("<play>".."</title>")) < [5] 
+        (("<title>".."</title>") < ("<play>".."</title>")) < [5]
 
     Return the title of all plays containing the line 'to be or not to be'
 
         (("<title>".."</title>") < ("<play>".."</title>")) < (("<play>".."</play>") > ("to", "be", "or", "not", "to", "be"))
 
 
-Press Ctl-D to exit. 
+Press Ctl-D to exit.
 """)
-
 
     while True:
         sys.stdout.write("\nGCL: ")
 
-        l = sys.stdin.readline()
-        if not l:
+        line = sys.stdin.readline()
+        if not line:
             break
 
-        l = l.strip()
+        line = line.strip()
 
-        if len(l) == 0:
+        if len(line) == 0:
             continue
 
         print("")
         try:
-            query = gcl.parse(l)
+            query = gcl.parse(line)
             for r in query:
-                res = "slice(%d,%d):\t%s" % (r.start, r.stop, " ".join(corpus[r])) 
+                res = f"slice({r.start:d},{r.stop:d}):\t{' '.join(corpus[r])}"
 
                 # Handle long lines
                 if len(res) > 80:
                     res = res[0:76] + "..."
                 print(res)
 
-        except Exception:
+        except Exception:  # noqa: BLE001 - Report query errors and keep the shell running.
             print(traceback.format_exc())
 
 
