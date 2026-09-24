@@ -216,8 +216,9 @@ These offsets are used to support checkpointing, which facilitates efficient pas
 later. Specifically, `checkpoint(position)` returns the nearest retained checkpoint at or
 before the requested token position as `(checkpoint_token_position, source_offset)`.
 
-For positioned tokens, checkpoints are currently retained every 256 tokens,
-starting at token zero. For example:
+For illustration, suppose checkpoints are retained every three tokens, starting
+at token zero. The implementation currently uses a stride of 256; the smaller
+stride here keeps the example short. Given this input:
 
 ```python
 checkpoint_index = InvertedIndex(
@@ -225,14 +226,14 @@ checkpoint_index = InvertedIndex(
 )
 ```
 
-This short index retains only its first checkpoint:
+With the illustrative three-token stride, the results would be:
 
 | Call | Result |
 | --- | --- |
 | `checkpoint_index.checkpoint(0)` | `(0, 100)` |
 | `checkpoint_index.checkpoint(1)` | `(0, 100)` |
 | `checkpoint_index.checkpoint(2)` | `(0, 100)` |
-| `checkpoint_index.checkpoint(3)` | `(0, 100)` |
+| `checkpoint_index.checkpoint(3)` | `(3, 210)` |
 
 In this example, the second and third tokens (indices 1 and 2) *start* somewhere between
 offsets 100 and 209 inclusive. The fourth token starts at offset 210. To retrieve
