@@ -100,8 +100,23 @@ spans is not included, even for `reader[:]`. Negative and omitted bounds and
 out-of-range clipping follow Python slicing. Empty slices return `""`; integer
 indexing and slice strides other than `1` are not supported.
 
-Cover-density results contain **inclusive** extents instead: convert `(start, end)`
-to `reader[start:end + 1]`.
+Cover-density results also provide exclusive-stop token slices:
+
+```python
+from pyra import CoverDensityRanking
+
+for region, score in CoverDensityRanking(index).rank(["brown", "fox"]):
+    print(score, reader[region])
+```
+
+`rank()` returns `(slice, score)` pairs in descending score order. Use the slice
+with `tokens[region]` or `reader[region]` directly; matched terms are used
+internally for scoring and are not included in ranked results.
+
+`iCovers()` yields cover dictionaries with `"slice"` and `"terms"` fields. The
+`"slice"` field replaces the earlier inclusive `"extent"` tuple. Migrate callers
+from `start, end = cover["extent"]` and `tokens[start:end + 1]` to
+`tokens[cover["slice"]]` (or `reader[cover["slice"]]`). Scores are unchanged.
 
 The default `RegexTokenizer` matches Unicode `\w+` terms and case-folds them.
 Configure matching, normalization, and filtering without changing source spans:
