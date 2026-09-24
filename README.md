@@ -217,8 +217,7 @@ later. Specifically, `checkpoint(position)` returns the nearest retained checkpo
 before the requested token position as `(checkpoint_token_position, source_offset)`.
 
 For illustration, suppose checkpoints are retained every three tokens, starting
-at token zero. The implementation currently uses a stride of 256; the smaller
-stride here keeps the example short. Given this input:
+at token zero (the actual implementation currently uses a stride of 256). Given this input:
 
 ```python
 checkpoint_index = InvertedIndex(
