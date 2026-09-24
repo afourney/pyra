@@ -43,13 +43,24 @@ uv sync --locked
 uv run poe lint        # Check Ruff lint rules
 uv run poe format-fix  # Apply Ruff formatting
 uv run poe test        # Run the unittest suite
-uv run poe check-all   # Check formatting, lint, spelling, and tests
+uv run poe typecheck   # Run strict Pyright checks
+uv run poe check-all   # Check formatting, lint, spelling, types, and tests
 ```
 
 `uv run poe format` checks formatting without changing files, `poe lint-fix`
 applies automatic lint fixes, and `poe spell` checks source and documentation
 spelling. The test fixtures and bundled Shakespeare corpus are excluded from
-spelling checks. Type checking and required type annotations are not enabled.
+spelling checks.
+
+Ruff requires function annotations (`ANN`), and Pyright checks the library and
+interactive example in strict mode. Tests retain the regular lint and formatting
+checks but are excluded from Pyright and `ANN`, since they include deliberately
+invalid inputs. `poe check` and `poe check-all` both include type checking.
+
+The `typings/ply/` directory contains small development stubs for the PLY APIs
+used here. PLY token and production values are dynamic; the rest of the library
+uses concrete annotations. Distributions include `py.typed` so downstream type
+checkers can use Pyra's annotations.
 
 GitHub Actions runs the suite on Python 3.11, 3.12, 3.13, and 3.14 for every
 pull request and push to `master`. CI runs `poe check-all` after installing the

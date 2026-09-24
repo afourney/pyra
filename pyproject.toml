@@ -27,8 +27,16 @@ Homepage = "https://github.com/afourney/pyra"
 [tool.setuptools]
 packages = ["pyra"]
 
+[tool.setuptools.package-data]
+pyra = ["py.typed"]
+
 [dependency-groups]
-dev = ["ruff", "poethepoet", "codespell"]
+dev = [
+    "ruff",
+    "poethepoet",
+    "codespell",
+    "pyright>=1.1.414",
+]
 
 [tool.ruff]
 line-length = 100
@@ -44,6 +52,7 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = [
+    "ANN", # required function annotations
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # Pyflakes
@@ -65,19 +74,32 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"test/**/*.py" = ["D"]
+"test/**/*.py" = ["D", "ANN"]
 # PLY reads these docstrings as regular expressions and grammar productions.
 "pyra/gcl_lex.py" = ["D400", "D403", "D415"]
 "pyra/gcl_yacc.py" = ["D400", "D403", "D415"]
 
+[tool.poe.executor]
+type = "uv"
+# Preserve the environment prepared by uv sync (including non-editable CI installs).
+no-sync = true
+
 [tool.poe.tasks]
-format = "ruff format --check --diff pyra test examples"
-format-fix = "ruff format pyra test examples"
-lint = "ruff check pyra test examples"
-lint-fix = "ruff check --fix pyra test examples"
+format = "ruff format --check --diff pyra test examples typings"
+format-fix = "ruff format pyra test examples typings"
+lint = "ruff check pyra test examples typings"
+lint-fix = "ruff check --fix pyra test examples typings"
 # Check source and documentation, excluding the test fixtures and Shakespeare corpus.
 spell = "codespell pyra examples/gcl_shell.py README.md"
 test = "python -I -m unittest discover -s test -v"
-check = ["format", "lint", "spell"]
-check-all = ["format", "lint", "spell", "test"]
+typecheck = "pyright"
+check = ["format", "lint", "spell", "typecheck"]
+check-all = ["format", "lint", "spell", "typecheck", "test"]
 fix-all = ["format-fix", "lint-fix"]
+
+[tool.pyright]
+include = ["pyra", "examples/gcl_shell.py", "typings"]
+stubPath = "typings"
+exclude = ["test", "**/__pycache__", ".venv"]
+typeCheckingMode = "strict"
+pythonVersion = "3.11"

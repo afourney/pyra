@@ -1,7 +1,20 @@
 """Search sorted posting lists with binary and galloping searches."""
 
+from __future__ import annotations
 
-def binary_search(sequence, item, start=0, end=None):
+from collections.abc import Sequence
+from typing import Protocol, Self, TypeVar
+
+
+class _Comparable(Protocol):
+    def __lt__(self, other: Self, /) -> bool: ...
+    def __gt__(self, other: Self, /) -> bool: ...
+
+
+_T = TypeVar("_T", bound=_Comparable)
+
+
+def binary_search(sequence: Sequence[_T], item: _T, start: int = 0, end: int | None = None) -> int:
     """Return the index of item, or the index it would take if inserted.
 
     Searches between start (inclusive) and end (exclusive),
@@ -23,7 +36,7 @@ def binary_search(sequence, item, start=0, end=None):
     return start
 
 
-def galloping_search(sequence, item, hint=0):
+def galloping_search(sequence: Sequence[_T], item: _T, hint: int = 0) -> int:
     """Return the index of item, or the index it would take if inserted.
 
     Start at hint, expand the search range, then use binary search.
@@ -40,7 +53,7 @@ def galloping_search(sequence, item, hint=0):
         return hint
 
 
-def _gsearch_forward(sequence, item, low):
+def _gsearch_forward(sequence: Sequence[_T], item: _T, low: int) -> int:
 
     # Gallop to find the range containing item
     jump = 1
@@ -55,7 +68,7 @@ def _gsearch_forward(sequence, item, low):
     return binary_search(sequence, item, max(0, low), min(high, len(sequence)))
 
 
-def _gsearch_back(sequence, item, high):
+def _gsearch_back(sequence: Sequence[_T], item: _T, high: int) -> int:
 
     # Gallop to find the range containing item
     jump = 1

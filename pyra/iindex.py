@@ -1,5 +1,11 @@
 """Index term positions and sparse source checkpoints."""
 
+from __future__ import annotations
+
+from collections.abc import Hashable, Iterable, Iterator
+from typing import cast
+
+from ._types import Position
 from .util import galloping_search
 
 INF = float("inf")
@@ -15,19 +21,20 @@ class InvertedIndex:
     beginning with a string are reserved for the source-offset form.
     """
 
-    def __init__(self, tokens):
+    def __init__(self, tokens: Iterable[Hashable]) -> None:
         """Build postings and optional source checkpoints from a single token pass."""
-        self.__postings = {}
+        self.__postings: dict[Hashable, list[int]] = {}
         self.__corpus_length = 0
-        self.__next_cache = {}
-        self.__prev_cache = {}
+        self.__next_cache: dict[Hashable, int] = {}
+        self.__prev_cache: dict[Hashable, int] = {}
         self.__has_offsets = False
-        self.__checkpoint_offsets = None
+        self.__checkpoint_offsets: list[int] | None = None
         previous_offset = None
 
         for t in tokens:
             position = self.__corpus_length
-            has_offset = isinstance(t, tuple) and len(t) == 2 and isinstance(t[0], str)
+            pair = cast(tuple[object, ...], t) if isinstance(t, tuple) else ()
+            has_offset = len(pair) == 2 and isinstance(pair[0], str)
             if position == 0:
                 self.__has_offsets = has_offset
                 if has_offset:
@@ -36,13 +43,14 @@ class InvertedIndex:
                 raise ValueError("cannot mix plain terms and terms with source offsets")
 
             if has_offset:
-                t, offset = t
+                t, offset = cast(tuple[str, object], pair)
                 if not isinstance(offset, int) or isinstance(offset, bool):
                     raise TypeError("source offsets must be integers (not booleans)")
                 if previous_offset is not None and offset < previous_offset:
                     raise ValueError("source offsets must be nondecreasing")
                 previous_offset = offset
                 if position % _CHECKPOINT_STRIDE == 0:
+                    assert self.__checkpoint_offsets is not None
                     self.__checkpoint_offsets.append(offset)
 
             if t not in self.__postings:
@@ -57,25 +65,25 @@ class InvertedIndex:
     #
 
     @property
-    def corpus_length(self):
+    def corpus_length(self) -> int:
         """Return the number of indexed tokens."""
         return self.__corpus_length
 
-    def next(self, term, position):
+    def next(self, term: Hashable, position: Position) -> Position:
         """Return the first occurrence strictly after position, or positive infinity."""
         i = self.__inext(term, position)
         if abs(i) == INF:
             return i
         else:
-            return self.__postings[term][i]
+            return self.__postings[term][cast(int, i)]
 
-    def prev(self, term, position):
+    def prev(self, term: Hashable, position: Position) -> Position:
         """Return the last occurrence strictly before position, or negative infinity."""
         i = self.__iprev(term, position)
         if abs(i) == INF:
             return i
         else:
-            return self.__postings[term][i]
+            return self.__postings[term][cast(int, i)]
 
     #
     # Convenience methods that are never called when
@@ -95,25 +103,27 @@ class InvertedIndex:
         Raise TypeError for non-integers (including booleans), or IndexError
         for positions outside the valid range.
         """
-        if not isinstance(position, int) or isinstance(position, bool):
+        # Keep runtime validation for callers that do not use a type checker.
+        if not isinstance(position, int) or isinstance(position, bool):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise TypeError("checkpoint position must be an integer (not a boolean)")
         if position < 0 or position > self.__corpus_length:
             raise IndexError("checkpoint position outside the corpus")
         if not self.__has_offsets:
             return (position, position)
 
+        assert self.__checkpoint_offsets is not None
         i = min(position // _CHECKPOINT_STRIDE, len(self.__checkpoint_offsets) - 1)
         return (i * _CHECKPOINT_STRIDE, self.__checkpoint_offsets[i])
 
-    def first(self, term):
+    def first(self, term: Hashable) -> Position:
         """Return the first occurrence of term, or positive infinity."""
         return self.next(term, -INF)
 
-    def last(self, term):
+    def last(self, term: Hashable) -> Position:
         """Return the last occurrence of term, or negative infinity."""
         return self.prev(term, INF)
 
-    def frequency(self, term, start=-INF, end=INF):
+    def frequency(self, term: Hashable, start: Position = -INF, end: Position = INF) -> int:
         """Return the number of occurrences within the inclusive start and end bounds."""
         # Returns the frequency of the term between the
         # start and end positions (inclusive)
@@ -134,9 +144,11 @@ class InvertedIndex:
         elif iend == INF:
             iend = len(self.__postings[term]) - 1
 
-        return iend - istart + 1
+        return cast(int, iend - istart + 1)
 
-    def postings(self, term, start=None, **args):
+    def postings(
+        self, term: Hashable, start: Position | None = None, **args: bool
+    ) -> Iterator[int]:
         """Iterate over term positions from start, optionally in reverse order."""
         reverse = False
         for arg, val in args.items():
@@ -148,7 +160,7 @@ class InvertedIndex:
         # Will return an iterator over the term's postings list
 
         if term not in self.__postings:
-            return [].__iter__()
+            return iter(())
 
         if reverse:
             if start is None:
@@ -156,9 +168,9 @@ class InvertedIndex:
 
             istart = self.__iprev(term, start + 1)
 
-            def rev_it(pl, i):
+            def rev_it(pl: list[int], i: Position) -> Iterator[int]:
                 while i >= 0:
-                    yield pl[i]
+                    yield pl[cast(int, i)]
                     i -= 1
 
             return rev_it(self.__postings[term], istart)
@@ -168,26 +180,26 @@ class InvertedIndex:
 
             istart = self.__inext(term, start - 1)
 
-            def fwd_it(pl, i):
+            def fwd_it(pl: list[int], i: Position) -> Iterator[int]:
                 while i < len(pl):
-                    yield pl[i]
+                    yield pl[cast(int, i)]
                     i += 1
 
             return fwd_it(self.__postings[term], istart)
 
-    def dictionary(self):
+    def dictionary(self) -> set[Hashable]:
         """Return the set of indexed terms."""
         return set(self.__postings.keys())
 
-    def __getitem__(self, term):
+    def __getitem__(self, term: Hashable) -> Iterator[int]:
         """Iterate over the postings for term."""
         return self.postings(term)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Hashable]:
         """Iterate over the indexed terms."""
         return self.dictionary().__iter__()
 
-    def __inext(self, term, position):
+    def __inext(self, term: Hashable, position: Position) -> Position:
 
         if term not in self.__postings:
             return INF
@@ -217,7 +229,7 @@ class InvertedIndex:
             self.__next_cache[term] = i
             return i
 
-    def __iprev(self, term, position):
+    def __iprev(self, term: Hashable, position: Position) -> Position:
 
         if term not in self.__postings:
             return -INF
