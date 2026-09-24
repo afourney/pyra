@@ -97,9 +97,6 @@ class CoverGenerator:
             return self
 
         def __next__(self) -> Cover:
-            return self.next()
-
-        def next(self) -> Cover:
             if self.__k == INF:
                 raise StopIteration()
 
@@ -140,39 +137,3 @@ class CoverGenerator:
 
     def _l(self, t: Hashable, k: Position) -> Position:
         return self.inverted_index.prev(t, k + 1)
-
-
-#
-# Helper method for converting extents to python slices
-#
-
-
-# Retain these helpers for compatibility with existing callers.
-def _extent2slice(extent: Extent) -> slice:  # pyright: ignore[reportUnusedFunction]
-    start = extent[0]
-    stop = extent[1]
-
-    if start == -INF:
-        start = None
-
-    if stop == INF:
-        stop = None
-    else:
-        stop += 1
-
-    return slice(start, stop)
-
-
-def _slice2extent(s: slice) -> Extent:  # pyright: ignore[reportUnusedFunction]
-    start = s.start
-    stop = s.stop
-
-    if start is None:
-        start = -INF
-
-    if stop is None:
-        stop = INF
-    elif stop == 0:
-        stop = -INF
-
-    return (start, stop - 1)
