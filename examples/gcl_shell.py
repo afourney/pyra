@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run an interactive GCL shell over the bundled Shakespeare corpus."""
 
+from __future__ import annotations
+
 import gzip
 import re
 import sys
@@ -10,7 +12,7 @@ from pathlib import Path
 from pyra import GCL, InvertedIndex
 
 
-def main():
+def main() -> None:
     """Index Shakespeare and evaluate queries read from standard input."""
     # Uber-dangerous
     sys.setrecursionlimit(sys.getrecursionlimit() * 10)  # 10 times the space to play
@@ -22,7 +24,7 @@ def main():
 
     print("Loading Shakespeare XML corpus...")
 
-    corpus = []
+    corpus: list[str] = []
     corpus_path = Path(__file__).with_name("shakespeare.xml.gz")
     with gzip.open(corpus_path, "rt", encoding="utf-8") as f:
         for line in f:
