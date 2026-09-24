@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import NoReturn, cast
 
 from ply import yacc
 from ply.lex import LexToken
@@ -112,14 +112,24 @@ def p_gcl_token(t: yacc.YaccProduction) -> None:
     t[0] = (t[1],)
 
 
-def p_error(t: LexToken) -> None:
-    """Report the token that caused a parse error."""
-    print(f"Syntax error at '{t.value}'")
+def p_error(t: LexToken | None) -> NoReturn:
+    """Reject the entire query, including errors at end of input."""
+    if t is None:
+        raise SyntaxError("Unexpected end of query")
+    raise SyntaxError(f"Unexpected token {t.value!r}", ("<query>", 1, t.lexpos + 1, None))
 
 
 yacc.yacc(debug=0, write_tables=0)
 
 
 def gcl_yacc_parse(expr: str) -> ParseTree:
-    """Return the operator tree for a GCL expression."""
-    return cast(ParseTree, yacc.parse(expr))
+    """Return an operator tree or raise SyntaxError with the source location."""
+    try:
+        return cast(ParseTree, yacc.parse(expr))
+    except SyntaxError as error:
+        position = error.offset - 1 if error.offset is not None else len(expr)
+        start = expr.rfind("\n", 0, position) + 1
+        stop = expr.find("\n", position)
+        line = expr[start : stop if stop >= 0 else len(expr)]
+        location = ("<query>", expr.count("\n", 0, position) + 1, position - start + 1, line)
+        raise SyntaxError(error.msg, location) from None

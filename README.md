@@ -26,6 +26,48 @@ python -m pip install .
 
 Installation includes PLY 3.11 for parsing query strings.
 
+### Interactive CLI
+
+Run `pyra <filename>` (or `python -m pyra <filename>`) to index a UTF-8 text file
+and open an interactive prompt:
+
+```text
+$ pyra notes.txt
+Indexing notes.txt...
+Pyra — notes.txt · 1,234 tokens
+
+Enter a GCL expression, or ? search terms for ranked passages.
+Ctrl-C cancels; Ctrl-D (Windows: Ctrl-Z then Enter) exits.
+
+pyra> "brown", "fox"
+pyra> ? brown fox
+```
+
+Queries beginning with `? ` retrieve passages ranked by cover density; other
+queries are GCL expressions, returned in document order. Ranked queries use
+the same word tokenization and case folding as the file. GCL quoted terms must
+match the indexed, case-folded words (for example, `"fox"`, not `"FOX"`).
+The default tokenizer does **not** preserve XML tags, unlike the Shakespeare
+example below.
+
+Results display the original text with whitespace collapsed, numbered alongside
+exclusive-stop token ranges `[start:stop]`. Ranked results include up to eight
+surrounding tokens on each side for context; the range still identifies the
+match. GCL results show exactly the selected region. Previews longer than 300
+characters keep their beginning and end with a middle ellipsis (`…`).
+
+Pages contain up to ten results, with fewer on short terminals. Press **Space**
+for the next page, or any other key to return to the query prompt. **Ctrl-C**
+cancels input or a running query; **Ctrl-D** exits (on Windows, **Ctrl-Z**, then
+**Enter**). Invalid queries display an explanation and a caret at the error.
+When input or output is redirected, each query shows at most ten results and
+does not wait for paging keys.
+
+The index is built in memory once at startup. Keep the file unchanged during
+the session. GCL results are consumed incrementally; ranked retrieval computes
+and sorts all candidate passages before displaying the first page. See
+`pyra --help` for usage.
+
 Run the interactive Shakespeare example or the tests from the repository root:
 
 ```sh

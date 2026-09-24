@@ -21,6 +21,9 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 
+[project.scripts]
+pyra = "pyra.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/afourney/pyra"
 
