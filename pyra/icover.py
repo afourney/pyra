@@ -14,7 +14,14 @@ INF = float("inf")
 
 
 class Cover(TypedDict):
-    """An inclusive passage extent and the query terms it covers."""
+    """An exclusive-stop token slice and the query terms it covers."""
+
+    slice: slice
+    terms: list[Hashable]
+
+
+class _ExtentCover(TypedDict):
+    """An internal inclusive extent, including exhausted-search sentinels."""
 
     extent: Extent
     terms: list[Hashable]
@@ -32,7 +39,7 @@ class CoverDensityRanking:
         return CoverGenerator(self.__idx, i, query)
 
     def rank(self, query: Iterable[Hashable]) -> list[tuple[Cover, float]]:
-        """Return passage and score pairs in descending score order."""
+        """Return (cover, score) pairs; each cover contains an exclusive-stop slice."""
         # Deduplicate the query
         q: dict[Hashable, int] = {}
         for t in query:
@@ -48,7 +55,8 @@ class CoverDensityRanking:
 
     def __score(self, icover: Cover) -> float:
         i = len(icover["terms"])
-        length = icover["extent"][1] - icover["extent"][0] + 1
+        start, stop, _step = icover["slice"].indices(self.__idx.corpus_length)
+        length = stop - start
         N = self.__idx.corpus_length
 
         acc = 0.0
@@ -96,15 +104,15 @@ class CoverGenerator:
                 raise StopIteration()
 
             r = self.__generator._first_starting_at_or_after(self.__k)
-            u, _v = r["extent"]
+            u, v = r["extent"]
 
             if u != INF:
                 self.__k = u + 1
-                return r  # _extent2slice( (u,v) )
+                return {"slice": slice(int(u), int(v) + 1), "terms": r["terms"]}
             else:
                 raise StopIteration()
 
-    def _first_starting_at_or_after(self, k: Position) -> Cover:
+    def _first_starting_at_or_after(self, k: Position) -> _ExtentCover:
         # Find the next location of each term in the query
         # then return the ith largest.
         r = [self._r(term, k) for term in self.__query]

@@ -82,8 +82,12 @@ class TestTextSources(unittest.TestCase):
                 ["brown, FOX", "brown fox"],
             )
             for cover, _score in CoverDensityRanking(index).rank(["brown", "fox"]):
-                start, end = cover["extent"]
-                self.assertTrue(reader[slice(start, end + 1)])
+                self.assertTrue(reader[cover["slice"]])
+                if set(cover["terms"]) == {"brown", "fox"}:
+                    self.assertIn(
+                        reader[cover["slice"]],
+                        ("brown, FOX", "FOX sleeps. Another brown", "brown fox"),
+                    )
 
     def test_filtering_and_normalization(self):
         tokenizer = RegexTokenizer(keep=lambda term: term != "the")
