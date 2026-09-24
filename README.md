@@ -191,26 +191,28 @@ later. Specifically, `checkpoint(position)` returns the nearest retained
 checkpoint at or before the requested token position as
 `(checkpoint_token_position, source_offset)`.
 
-For illustration, suppose checkpoints occur every two tokens. The current
-implementation uses 256 tokens; checkpoint spacing is an implementation detail.
-Given this input:
+For illustration, suppose checkpoints occur every three tokens. Given this input:
 
 ```python
-index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170)])
+index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170), ("world", 210)])
 ```
 
-The illustrative two-token interval would give:
+The illustrative three-token interval would give:
 
 | Call | Result |
 | --- | --- |
 | `index.checkpoint(0)` | `(0, 100)` |
 | `index.checkpoint(1)` | `(0, 100)` |
-| `index.checkpoint(2)` | `(2, 170)` |
+| `index.checkpoint(2)` | `(0, 100)` |
+| `index.checkpoint(3)` | `(3, 210)` |
 
-In this example, the first two tokens start between offsets 100 and 169,
-and the third token starts at offset 170. To retrieve the source substring
-containing the first two tokens, one would begin tokenizing from offset 100 and
-retain the substring through the end of the second token.
+In this example, the second and third tokens (index 1 and 2) *start* somewhere between
+offsets 100 and 209 inclusive. The fourth token starts at offset 210. To retrieve
+the source substring containing the second and third tokens, one would begin
+tokenizing from offset 100, skip the first token, then retain the substring from 
+the start of the second token through the end of the third (which should be offsets 
+`[120:170+len("hello")]` ).For this example, using character offsets and the original
+token text, that substring would be source[120:175]
 
 For plain terms, `checkpoint(position)` returns `(position, position)` without
 storing checkpoint entries.
