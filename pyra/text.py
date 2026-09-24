@@ -190,6 +190,8 @@ class FileTextSource(_TextSource):
 
     def read(self, start: int, stop: int) -> str:
         """Read a UTF-8 passage without newline translation."""
+        if stop <= start:
+            return ""
         with self._path.open("rb") as stream:
             stream.seek(start)
             return stream.read(stop - start).decode("utf-8")
