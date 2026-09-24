@@ -206,13 +206,13 @@ The illustrative three-token interval would give:
 | `index.checkpoint(2)` | `(0, 100)` |
 | `index.checkpoint(3)` | `(3, 210)` |
 
-In this example, the second and third tokens (index 1 and 2) *start* somewhere between
+In this example, the second and third tokens (indices 1 and 2) *start* somewhere between
 offsets 100 and 209 inclusive. The fourth token starts at offset 210. To retrieve
 the source substring containing the second and third tokens, one would begin
-tokenizing from offset 100, skip the first token, then retain the substring from 
-the start of the second token through the end of the third (which should be offsets 
-`[120:170+len("hello")]` ).For this example, using character offsets and the original
-token text, that substring would be source[120:175]
+tokenizing from offset 100, skip the first token, then retain the substring from
+the start of the second token through the end of the third. For this example,
+using character offsets and the original token text, that substring would be
+`source[120:175]`.
 
 For plain terms, `checkpoint(position)` returns `(position, position)` without
 storing checkpoint entries.
