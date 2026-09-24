@@ -85,6 +85,9 @@ class InvertedIndex(object):
     def checkpoint(self, position: int) -> tuple[int, int]:
         """Return the nearest checkpoint at or before a token position.
 
+        The returned pair is (checkpoint_token_position, source_offset).
+        Plain terms return (position, position) without storing checkpoints.
+
         The inclusive range 0 <= position <= corpus_length is valid. At the
         end boundary, explicit-offset input returns its last checkpoint.
         An empty index returns (0, 0) for position 0.

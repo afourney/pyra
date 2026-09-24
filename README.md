@@ -185,25 +185,35 @@ for region in gcl.parse(
 
 `InvertedIndex` accepts an iterable of plain terms or `(term, source_offset)`
 pairs, where `term` is a string and `source_offset` is an integer such as
-the terms character offset in a string, or byte offset in a file. These offsets
+the term's character offset in a string, or byte offset in a file. These offsets
 are used to support checkpointing, which facilitates efficient passage retrieval
-later.  Specifically, `checkpoint(position)` returns the nearest retained
+later. Specifically, `checkpoint(position)` returns the nearest retained
 checkpoint at or before the requested token position as
- `(checkpoint_token_position, source_offset)`.
+`(checkpoint_token_position, source_offset)`.
 
-For examplem if checkpointing is occurs every 2 tokens, then:
+For illustration, suppose checkpoints occur every two tokens. The current
+implementation uses 256 tokens; checkpoint spacing is an implementation detail.
+Given this input:
 
 ```python
 index = InvertedIndex([("hello", 100), ("world", 120), ("hello", 170)])
-assert index.checkpoint(0) == (0, 100)
-assert index.checkpoint(1) == (1, 100)
-assert index.checkpoint(2) == (2, 170)
 ```
 
-This means that the first two tokens occur somewhere between offsets 100 and 169,
-and the third token occurs at or after offset 170. To retieve the source substring
-containg the first two tokens, one would begin tokenizing from offset 100, and
-retain the substring up until the seconds token has been read.
+The illustrative two-token interval would give:
+
+| Call | Result |
+| --- | --- |
+| `index.checkpoint(0)` | `(0, 100)` |
+| `index.checkpoint(1)` | `(0, 100)` |
+| `index.checkpoint(2)` | `(2, 170)` |
+
+In this example, the first two tokens start between offsets 100 and 169,
+and the third token starts at offset 170. To retrieve the source substring
+containing the first two tokens, one would begin tokenizing from offset 100 and
+retain the substring through the end of the second token.
+
+For plain terms, `checkpoint(position)` returns `(position, position)` without
+storing checkpoint entries.
 
 Source offsets are opaque, nondecreasing integers: they may be bytes, characters,
 or another source-defined coordinate.
