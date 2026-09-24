@@ -34,11 +34,27 @@ python examples/gcl_shell.py
 python -m unittest discover -s test -v
 ```
 
-For development, use `python -m pip install -e .` instead.
+### Development
+
+Install the development tools with [uv](https://docs.astral.sh/uv/):
+
+```sh
+uv sync --locked
+uv run poe lint        # Check Ruff lint rules
+uv run poe format-fix  # Apply Ruff formatting
+uv run poe test        # Run the unittest suite
+uv run poe check-all   # Check formatting, lint, spelling, and tests
+```
+
+`uv run poe format` checks formatting without changing files, `poe lint-fix`
+applies automatic lint fixes, and `poe spell` checks source and documentation
+spelling. The test fixtures and bundled Shakespeare corpus are excluded from
+spelling checks. Type checking and required type annotations are not enabled.
 
 GitHub Actions runs the suite on Python 3.11, 3.12, 3.13, and 3.14 for every
-pull request and push to `master`. CI installs the package with uv and runs the
-tests in isolated mode (`python -I`) to exercise the installed library.
+pull request and push to `master`. CI runs `poe check-all` after installing the
+package with uv in non-editable mode. Tests run in isolated mode (`python -I`)
+to exercise the installed library.
 
 
 ### Algebra and Query Language

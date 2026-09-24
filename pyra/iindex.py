@@ -1,10 +1,12 @@
-from .util import galloping_search
-from itertools import islice
+"""Index term positions and sparse source checkpoints."""
 
-INF = float('inf')
+from .util import galloping_search
+
+INF = float("inf")
 _CHECKPOINT_STRIDE = 256
 
-class InvertedIndex(object):
+
+class InvertedIndex:
     """Index plain terms or (string term, integer source offset) pairs.
 
     Input is consumed once and must not mix the two forms. Source offsets
@@ -14,6 +16,7 @@ class InvertedIndex(object):
     """
 
     def __init__(self, tokens):
+        """Build postings and optional source checkpoints from a single token pass."""
         self.__postings = {}
         self.__corpus_length = 0
         self.__next_cache = {}
@@ -24,8 +27,7 @@ class InvertedIndex(object):
 
         for t in tokens:
             position = self.__corpus_length
-            has_offset = (isinstance(t, tuple) and len(t) == 2
-                          and isinstance(t[0], str))
+            has_offset = isinstance(t, tuple) and len(t) == 2 and isinstance(t[0], str)
             if position == 0:
                 self.__has_offsets = has_offset
                 if has_offset:
@@ -56,29 +58,27 @@ class InvertedIndex(object):
 
     @property
     def corpus_length(self):
+        """Return the number of indexed tokens."""
         return self.__corpus_length
 
-
     def next(self, term, position):
-
+        """Return the first occurrence strictly after position, or positive infinity."""
         i = self.__inext(term, position)
         if abs(i) == INF:
             return i
         else:
             return self.__postings[term][i]
 
-
     def prev(self, term, position):
-
+        """Return the last occurrence strictly before position, or negative infinity."""
         i = self.__iprev(term, position)
         if abs(i) == INF:
             return i
         else:
             return self.__postings[term][i]
 
-
     #
-    # Convenience methods that are never called when 
+    # Convenience methods that are never called when
     # processing region algebra queries
     #
 
@@ -105,16 +105,16 @@ class InvertedIndex(object):
         i = min(position // _CHECKPOINT_STRIDE, len(self.__checkpoint_offsets) - 1)
         return (i * _CHECKPOINT_STRIDE, self.__checkpoint_offsets[i])
 
-
     def first(self, term):
+        """Return the first occurrence of term, or positive infinity."""
         return self.next(term, -INF)
 
-
     def last(self, term):
+        """Return the last occurrence of term, or negative infinity."""
         return self.prev(term, INF)
 
-
     def frequency(self, term, start=-INF, end=INF):
+        """Return the number of occurrences within the inclusive start and end bounds."""
         # Returns the frequency of the term between the
         # start and end positions (inclusive)
 
@@ -122,13 +122,13 @@ class InvertedIndex(object):
             return 0
 
         istart = self.__inext(term, start - 1)
-        iend   = self.__iprev(term, end + 1)
+        iend = self.__iprev(term, end + 1)
 
         if istart == INF:
             return 0
         elif istart == -INF:
             istart = 0
-         
+
         if iend == -INF:
             return 0
         elif iend == INF:
@@ -136,11 +136,10 @@ class InvertedIndex(object):
 
         return iend - istart + 1
 
-
     def postings(self, term, start=None, **args):
-
+        """Iterate over term positions from start, optionally in reverse order."""
         reverse = False
-        for arg,val in args.items():
+        for arg, val in args.items():
             if arg == "reverse":
                 reverse = val
             else:
@@ -150,44 +149,43 @@ class InvertedIndex(object):
 
         if term not in self.__postings:
             return [].__iter__()
-            
+
         if reverse:
             if start is None:
                 start = INF
 
-            istart = self.__iprev(term, start+1)
+            istart = self.__iprev(term, start + 1)
 
-            def rev_it(pl,i):
+            def rev_it(pl, i):
                 while i >= 0:
                     yield pl[i]
                     i -= 1
-            
+
             return rev_it(self.__postings[term], istart)
         else:
             if start is None:
                 start = -INF
 
-            istart = self.__inext(term, start-1)
+            istart = self.__inext(term, start - 1)
 
-            def fwd_it(pl,i):
+            def fwd_it(pl, i):
                 while i < len(pl):
                     yield pl[i]
                     i += 1
-            
+
             return fwd_it(self.__postings[term], istart)
 
-
     def dictionary(self):
+        """Return the set of indexed terms."""
         return set(self.__postings.keys())
 
-
     def __getitem__(self, term):
+        """Iterate over the postings for term."""
         return self.postings(term)
 
-
     def __iter__(self):
+        """Iterate over the indexed terms."""
         return self.dictionary().__iter__()
-
 
     def __inext(self, term, position):
 
@@ -202,24 +200,22 @@ class InvertedIndex(object):
         if position < plist[0]:
             return 0
 
-        # Reset the cache if our assumption of a 
+        # Reset the cache if our assumption of a
         # forward scan is viloated
-        if (self.__next_cache[term] > 0 and 
-            plist[self.__next_cache[term]] > position):
-           self.__next_cache[term] = 0
+        if self.__next_cache[term] > 0 and plist[self.__next_cache[term]] > position:
+            self.__next_cache[term] = 0
 
-        i = galloping_search(plist, position, self.__next_cache[term]) 
+        i = galloping_search(plist, position, self.__next_cache[term])
 
         # position is in the list, at position i
         if plist[i] == position:
-            self.__next_cache[term] = i+1
-            return i+1
+            self.__next_cache[term] = i + 1
+            return i + 1
         # position not in list, and all positions from i to end
         # are larger
-        else: 
+        else:
             self.__next_cache[term] = i
             return i
-
 
     def __iprev(self, term, position):
 
@@ -232,22 +228,21 @@ class InvertedIndex(object):
             return -INF
 
         if position > plist[-1]:
-            return len(plist)-1
+            return len(plist) - 1
 
-        # Reset the cache if our assumption of a 
+        # Reset the cache if our assumption of a
         # backward scan is viloated
-        if (self.__prev_cache[term] < len(plist)-1 and
-            plist[self.__prev_cache[term]] < position):
-           self.__prev_cache[term] = len(plist)-1
+        if self.__prev_cache[term] < len(plist) - 1 and plist[self.__prev_cache[term]] < position:
+            self.__prev_cache[term] = len(plist) - 1
 
-        i = galloping_search(plist, position, self.__prev_cache[term]) 
+        i = galloping_search(plist, position, self.__prev_cache[term])
 
         # position is in the list, at position i
         if plist[i] == position:
-            self.__prev_cache[term] = i-1
-            return i-1
+            self.__prev_cache[term] = i - 1
+            return i - 1
         # position not in list, and all positions from i to end
         # are larger
         else:
-            self.__prev_cache[term] = i-1
-            return i-1
+            self.__prev_cache[term] = i - 1
+            return i - 1
