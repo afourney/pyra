@@ -77,6 +77,7 @@ Output:
 8. [648327:648334] three ages since: but I think now 'tis <b>not to be</LINE> <LINE>found; or</b>, if it were, it would neither serve for
 9. [141750:141753] to stuff a botcher's</LINE> <LINE>cushion, <b>or to be</b> entombed in an ass's pack-</LINE> <LINE>
 10. [258812:258815] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE><b>To be, or</b> not to be: that is the question:</LINE>
+Space: more · Any other key: back to query
 </pre>
 
 Queries beginning with `? ` retrieve passages ranked by cover density; other
@@ -84,7 +85,7 @@ queries are GCL expressions, returned in document order.
 
 Results display the original text with whitespace collapsed, numbered alongside
 exclusive-stop token ranges `[start:stop]`. Ranked results include up to eight
-surrounding tokens on each side for context; the range still identifies the
+surrounding tokens on each side for context; the range (in bold) still identifies the
 match. In a color terminal, the matched slice has a yellow background, leaving
 the surrounding context unhighlighted. Redirected output stays plain; set
 `NO_COLOR=1` to disable highlighting in the terminal.
