@@ -39,44 +39,53 @@ Pyra — notes.txt · 1,234 tokens
 Enter a GCL expression, or ? search terms for ranked passages.
 Ctrl-C cancels; Ctrl-D (Windows: Ctrl-Z then Enter) exits.
 
-pyra> "brown", "fox"
-pyra> ? brown fox
+pyra> "<title>".."</title>"
+```
+
+Output:
+
+```text
+1. [15:23] <TITLE>The Tragedy of Antony and Cleopatra</TITLE>
+2. [68:72] <TITLE>Dramatis Personae</TITLE>
+3. [279:283] <TITLE>ACT I</TITLE>
+4. [284:295] <TITLE>SCENE I. Alexandria. A room in CLEOPATRA's palace.</TITLE>
+5. [1096:1104] <TITLE>SCENE II. The same. Another room.</TITLE>
+6. [3525:3533] <TITLE>SCENE III. The same. Another room.</TITLE>
+7. [4888:4897] <TITLE>SCENE IV. Rome. OCTAVIUS CAESAR's house.</TITLE>
+8. [5883:5891] <TITLE>SCENE V. Alexandria. CLEOPATRA's palace.</TITLE>
+9. [6866:6870] <TITLE>ACT II</TITLE>
+10. [6871:6879] <TITLE>SCENE I. Messina. POMPEY's house.</TITLE>
+Space: more · Any other key: back to query
+```
+
+For passage ranking, enter `?` followed by search terms. For example:
+
+```text
+pyra> ? to be or not
+```
+
+Output:
+
+```text
+1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>
+2. [258813:258817] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether
+3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether 'tis
+4. [1254792:1254797] play on;</LINE> <LINE>Not like a corse; or if, not to be buried,</LINE> <LINE>But quick and in mine
+5. [81769:81772] </LINE> <LINE>If that I do not dream or be not frantic,--</LINE> <LINE>As I do trust I
+6. [258813:258816] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>
+7. [1104261:1104264] GONZALO</SPEAKER> <LINE>Whether this be</LINE> <LINE>Or be not, I'll not swear.</LINE> </SPEECH> <SPEECH> <SPEAKER>
+8. [648327:648334] three ages since: but I think now 'tis not to be</LINE> <LINE>found; or, if it were, it would neither serve for
+9. [141750:141753] to stuff a botcher's</LINE> <LINE>cushion, or to be entombed in an ass's pack-</LINE> <LINE>
+10. [258812:258815] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE>
 ```
 
 Queries beginning with `? ` retrieve passages ranked by cover density; other
-queries are GCL expressions, returned in document order. Ranked queries use
-the same tokenizer and lowercase normalization as the file. GCL quoted terms
-must match the indexed lowercase terms (for example, `"fox"`, not `"FOX"`).
-The CLI and Shakespeare demo share the default tokenizer: simple tags such as
-`<title>` and `</title>` remain tokens, as do slash-separated terms. Other
-punctuation separates terms, with boundaries before `<` and after `>`.
-This follows the demo's lightweight splitting rules, not full XML parsing:
-tags containing attributes, namespaces, or hyphens may be split.
+queries are GCL expressions, returned in document order.
 
 Results display the original text with whitespace collapsed, numbered alongside
 exclusive-stop token ranges `[start:stop]`. Ranked results include up to eight
 surrounding tokens on each side for context; the range still identifies the
-match. GCL results show exactly the selected region. Previews longer than 300
-characters keep their beginning and end with a middle ellipsis (`…`).
-
-Pages contain up to ten results, with fewer on short terminals. Press **Space**
-for the next page, or any other key to return to the query prompt. **Ctrl-C**
-cancels input or a running query; **Ctrl-D** exits (on Windows, **Ctrl-Z**, then
-**Enter**). Invalid queries display an explanation and a caret at the error.
-When input or output is redirected, each query shows at most ten results and
-does not wait for paging keys.
-
-The index is built in memory once at startup. Keep the file unchanged during
-the session. GCL results are consumed incrementally; ranked retrieval computes
-and sorts all candidate passages before displaying the first page. See
-`pyra --help` for usage.
-
-Run the interactive Shakespeare example or the tests from the repository root:
-
-```sh
-python examples/gcl_shell.py
-python -m unittest discover -s test -v
-```
+match.
 
 ### Algebra and Query Language
 
