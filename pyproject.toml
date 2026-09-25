@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyra"
-version = "0.2.6"
+version = "0.3.0"
 description = "A Python implementation of the GCL region algebra and query language described by Clarke et al."
 readme = "README.md"
 requires-python = ">=3.11"
