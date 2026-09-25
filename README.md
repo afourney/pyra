@@ -45,10 +45,13 @@ pyra> ? brown fox
 
 Queries beginning with `? ` retrieve passages ranked by cover density; other
 queries are GCL expressions, returned in document order. Ranked queries use
-the same word tokenization and case folding as the file. GCL quoted terms must
-match the indexed, case-folded words (for example, `"fox"`, not `"FOX"`).
-The default tokenizer does **not** preserve XML tags, unlike the Shakespeare
-example below.
+the same tokenizer and lowercase normalization as the file. GCL quoted terms
+must match the indexed lowercase terms (for example, `"fox"`, not `"FOX"`).
+The CLI and Shakespeare demo share the default tokenizer: simple tags such as
+`<title>` and `</title>` remain tokens, as do slash-separated terms. Other
+punctuation separates terms, with boundaries before `<` and after `>`.
+This follows the demo's lightweight splitting rules, not full XML parsing:
+tags containing attributes, namespaces, or hyphens may be split.
 
 Results display the original text with whitespace collapsed, numbered alongside
 exclusive-stop token ranges `[start:stop]`. Ranked results include up to eight
@@ -105,7 +108,8 @@ Our region algebra consists of the following elements:
 ### Examples
 
 The interactive example in `examples/gcl_shell.py` tokenizes the bundled Shakespeare
-XML corpus, preserving tags as tokens. With that tokenization, we can run the
+XML corpus, preserving tags as tokens. It prints the example queries below, then
+uses the same interactive shell as `pyra`. With that tokenization, we can run the
 following queries using Pyra:
 
 **Return the titles of all plays, acts, scenes, etc.**
@@ -113,32 +117,32 @@ following queries using Pyra:
     "<title>".."</title>"         
 
     Results:
-    slice(15,23):               <title> the tragedy of antony and cleopatra </title>
-    slice(68,72):               <title> dramatis personae </title>
-    slice(279,283):             <title> act i </title>
-    slice(284,295):             <title> scene i alexandria a room in cleopatra s palace </title>
-    slice(1097,1105):           <title> scene ii the same another room </title>
-    slice(3526,3534):           <title> scene iii the same another room </title>
-    slice(4889,4898):           <title> scene iv rome octavius caesar s house </title>
-    slice(5885,5893):           <title> scene v alexandria cleopatra s palace </title>
+    slice(15,23):               <TITLE>The Tragedy of Antony and Cleopatra</TITLE>
+    slice(68,72):               <TITLE>Dramatis Personae</TITLE>
+    slice(279,283):             <TITLE>ACT I</TITLE>
+    slice(284,295):             <TITLE>SCENE I. Alexandria. A room in CLEOPATRA's palace.</TITLE>
+    slice(1096,1104):           <TITLE>SCENE II. The same. Another room.</TITLE>
+    slice(3525,3533):           <TITLE>SCENE III. The same. Another room.</TITLE>
+    slice(4888,4897):           <TITLE>SCENE IV. Rome. OCTAVIUS CAESAR's house.</TITLE>
+    slice(5883,5891):           <TITLE>SCENE V. Alexandria. CLEOPATRA's palace.</TITLE>
 
     ... And, many more ...
 
- 
+
 **Return the titles of all plays**
 **(i.e., the first title found in the play)**
 
     ("<title>".."</title>") < ("<play>".."</title>")         
 
     Results:
-    slice(15,23):                <title> the tragedy of antony and cleopatra </title>
-    slice(40514,40522):          <title> all s well that ends well </title>
-    slice(75567,75573):          <title> as you like it </title>
-    slice(107909,107915):        <title> the comedy of errors </title>
-    slice(130779,130785):        <title> the tragedy of coriolanus </title>
-    slice(173424,173427):        <title> cymbeline </title>
-    slice(214962,214969):        <title> a midsummer night s dream </title>
-    slice(239304,239313):        <title> the tragedy of hamlet prince of denmark </title>
+    slice(15,23):               <TITLE>The Tragedy of Antony and Cleopatra</TITLE>
+    slice(40499,40507):         <TITLE>All's Well That Ends Well</TITLE>
+    slice(75547,75553):         <TITLE>As You Like It</TITLE>
+    slice(107885,107891):       <TITLE>The Comedy of Errors</TITLE>
+    slice(130751,130757):       <TITLE>The Tragedy of Coriolanus</TITLE>
+    slice(173376,173379):       <TITLE>Cymbeline</TITLE>
+    slice(214898,214905):       <TITLE>A Midsummer Night's Dream</TITLE>
+    slice(239237,239246):       <TITLE>The Tragedy of Hamlet, Prince of Denmark</TITLE>
 
     ... And, many more ...
 
@@ -148,12 +152,13 @@ following queries using Pyra:
     (("<title>".."</title>") < ("<play>".."</title>")) > "henry"  
 
     Results:
-    slice(322005,322014):        <title> the second part of henry the fourth </title>
-    slice(361126,361134):        <title> the life of henry the fifth </title>
-    slice(399220,399229):        <title> the first part of henry the sixth </title>
-    slice(431541,431550):        <title> the second part of henry the sixth </title>
-    slice(469240,469249):        <title> the third part of henry the sixth </title>
-    slice(505920,505932):        <title> the famous history of the life of henry the ei...
+    slice(285527,285536):       <TITLE>The First Part of Henry the Fourth</TITLE>
+    slice(321918,321927):       <TITLE>The Second Part of Henry the Fourth</TITLE>
+    slice(361010,361018):       <TITLE>The Life of Henry the Fifth</TITLE>
+    slice(399096,399105):       <TITLE>The First Part of Henry the Sixth</TITLE>
+    slice(431400,431409):       <TITLE>The Second Part of Henry the Sixth</TITLE>
+    slice(469082,469091):       <TITLE>The Third Part of Henry the Sixth</TITLE>
+    slice(505742,505754):       <TITLE>The Famous History of the Life of Henry the Eighth</TITLE>
 
 
 **Return short play titles (4 or fewer words)**
@@ -162,17 +167,17 @@ following queries using Pyra:
     (("<title>".."</title>") < ("<play>".."</title>")) < [6] 
 
     Results:
-    slice(75567,75573):          <title> as you like it </title>
-    slice(107909,107915):        <title> the comedy of errors </title>
-    slice(130779,130785):        <title> the tragedy of coriolanus </title>
-    slice(173424,173427):        <title> cymbeline </title>
-    slice(677133,677138):        <title> measure for measure </title>
-    slice(744759,744765):        <title> the tragedy of macbeth </title>
-    slice(771553,771559):        <title> the merchant of venice </title>
-    slice(802540,802546):        <title> much ado about nothing </title>
-    slice(875994,876000):        <title> pericles prince of tyre </title>
-    slice(1081750,1081754):      <title> the tempest </title>
-    slice(1233968,1233974):      <title> the winter s tale </title>
+    slice(75547,75553):         <TITLE>As You Like It</TITLE>
+    slice(107885,107891):       <TITLE>The Comedy of Errors</TITLE>
+    slice(130751,130757):       <TITLE>The Tragedy of Coriolanus</TITLE>
+    slice(173376,173379):       <TITLE>Cymbeline</TITLE>
+    slice(676893,676898):       <TITLE>Measure for Measure</TITLE>
+    slice(744508,744514):       <TITLE>The Tragedy of Macbeth</TITLE>
+    slice(771291,771297):       <TITLE>The Merchant of Venice</TITLE>
+    slice(802276,802282):       <TITLE>Much Ado about Nothing</TITLE>
+    slice(875723,875729):       <TITLE>Pericles, Prince of Tyre</TITLE>
+    slice(1081436,1081440):     <TITLE>The Tempest</TITLE>
+    slice(1233608,1233614):     <TITLE>The Winter's Tale</TITLE>
 
 
 **Return the titles of all plays containing the phrase 'to be or not to be'**
@@ -180,7 +185,8 @@ following queries using Pyra:
     (("<title>".."</title>") < ("<play>".."</title>")) < (("<play>".."</play>") > ("to", "be", "or", "not", "to", "be"))
 
     Results:
-    slice(239304,239313):        <title> the tragedy of hamlet prince of denmark </title>
+    slice(239237,239246):       <TITLE>The Tragedy of Hamlet, Prince of Denmark</TITLE>
+
 
 ### Code Examples
 
@@ -194,9 +200,11 @@ string_source = StringTextSource("The brown, FOX sleeps. Another brown fox runs.
 file_source = FileTextSource("notes.txt")  # Alternative: supply your own UTF-8 file.
 ```
 
-Both sources use `RegexTokenizer` by default: it matches Unicode `\w+` terms
-and case-folds them. Unlike the Shakespeare example's tokenizer, it does not
-preserve XML tags. Each iteration yields fresh `(term, source_offset)` pairs;
+Both sources use `RegexTokenizer` by default: it lowercases terms and preserves
+simple XML tags using the same splitting rules as the CLI and Shakespeare demo.
+Empty fragments are omitted. To use word-only, case-folded tokenization instead,
+pass `tokenizer=RegexTokenizer(r"\w+", normalize=str.casefold)` to either source.
+Each iteration yields fresh `(term, source_offset)` pairs;
 string offsets count characters, while file offsets count bytes.
 
 Next, we need to build an index from the source.

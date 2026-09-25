@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from pyra import InvertedIndex, RegexTokenizer, StringTextSource
-from pyra.cli import _preview, _shell, _shorten, _show_results, main
+from pyra.cli import _preview, _shorten, _show_results, main, run_shell
 
 
 class TerminalOutput(io.StringIO):
@@ -19,6 +19,23 @@ class TerminalOutput(io.StringIO):
 
 
 class TestCLI(unittest.TestCase):
+    def test_cli_uses_markup_and_lowercase_for_file_and_ranked_queries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "notes.xml"
+            path.write_text("<TITLE>Straße & FOX</TITLE>", encoding="utf-8")
+            output = io.StringIO()
+            with (
+                contextlib.redirect_stdout(output),
+                patch(
+                    "builtins.input",
+                    side_effect=['"<title>".."</title>"', "? STRAßE", "? STRASSE", EOFError],
+                ),
+            ):
+                self.assertEqual(main([str(path)]), 0)
+            self.assertIn("1. [0:4] <TITLE>Straße & FOX</TITLE>", output.getvalue())
+            self.assertIn("1. [1:2] <TITLE>Straße & FOX</TITLE>", output.getvalue())
+            self.assertEqual(output.getvalue().count("No results."), 1)
+
     def setUp(self):
         self.source = StringTextSource("Before the BROWN, Fox jumps after lunch.")
         self.index = InvertedIndex(self.source)
@@ -60,7 +77,7 @@ class TestCLI(unittest.TestCase):
             EOFError,
         ]
         with contextlib.redirect_stdout(output), patch("builtins.input", side_effect=inputs):
-            _shell(self.index, self.reader, RegexTokenizer())
+            run_shell(self.index, self.reader, RegexTokenizer())
         text = output.getvalue()
         self.assertIn("Unexpected end of query", text)
         self.assertIn("search terms must be quoted", text)

@@ -11,7 +11,15 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import cast
 
-from . import GCL, CoverDensityRanking, FileTextSource, InvertedIndex, PassageReader, RegexTokenizer
+from . import (
+    GCL,
+    CoverDensityRanking,
+    FileTextSource,
+    InvertedIndex,
+    PassageReader,
+    RegexTokenizer,
+    Tokenizer,
+)
 
 _PAGE_SIZE = 10
 _PREVIEW_LENGTH = 300
@@ -115,7 +123,8 @@ def _show_results(
         print("No results.")
 
 
-def _shell(index: InvertedIndex, reader: PassageReader, tokenizer: RegexTokenizer) -> None:
+def run_shell(index: InvertedIndex, reader: PassageReader, tokenizer: Tokenizer) -> None:
+    """Run the shared query loop over a prepared index and its text reader."""
     gcl = GCL(index)
     ranking = CoverDensityRanking(index)
     print("Enter a GCL expression, or ? search terms for ranked passages.")
@@ -156,8 +165,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Search a UTF-8 text file using GCL or ranked passages.",
         epilog=(
-            'Use quoted, case-folded terms in GCL (e.g. "brown" ^ "fox"), or ? brown fox. '
-            "Tokenization uses Unicode words; XML tags are not preserved. "
+            'Use quoted, lowercase terms in GCL (e.g. "brown" ^ "fox"), or ? brown fox. '
+            "Tokenization preserves simple XML tags and uses lowercase terms. "
             "The file must remain unchanged while the shell is running."
         ),
     )
@@ -172,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Indexing {path}...", flush=True)
         index = InvertedIndex(source)
         print(f"Pyra — {path.name} · {index.corpus_length:,} tokens\n")
-        _shell(index, source.reader(index), tokenizer)
+        run_shell(index, source.reader(index), tokenizer)
     except (OSError, UnicodeError) as error:
         print(f"pyra: {error}", file=sys.stderr)
         return 1

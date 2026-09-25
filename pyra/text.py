@@ -31,13 +31,19 @@ class Tokenizer(Protocol):
 
 
 class RegexTokenizer:
-    """Find regex matches, normalize their terms, and optionally filter them."""
+    """Find regex matches, normalize their terms, and optionally filter them.
+
+    Defaults follow the Shakespeare demo: lowercase words and simple tags,
+    retaining slashes and angle brackets. Boundaries occur before ``<``, after
+    ``>``, and at characters outside Unicode word characters and ``/<>``.
+    This is lightweight markup tokenization, not a general XML parser.
+    """
 
     def __init__(
         self,
-        pattern: str = r"\w+",
+        pattern: str = r"<?[\w/]+>?|<>?|>",
         *,
-        normalize: Callable[[str], str] = str.casefold,
+        normalize: Callable[[str], str] = str.lower,
         keep: Callable[[str], bool] | None = None,
     ) -> None:
         """Configure token matching; filtering receives the normalized term."""

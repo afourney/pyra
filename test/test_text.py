@@ -1,3 +1,4 @@
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +15,39 @@ from pyra import (
 
 
 class TestTextSources(unittest.TestCase):
+    def test_default_tokenizer_matches_demo_terms(self):
+        for text in (
+            "<TITLE>Hamlet</TITLE><LINE>To be, or not to be.</LINE>",
+            "<TITLE>Straße, CAFÉ & FOX!</TITLE>",
+            ' <TAG ID="value">a/b: foo-bar</TAG> ',
+            "a<b>c <<tag>> <> < > <empty/> _word 12/34",
+            "  ... !!!  ",
+        ):
+            with self.subTest(text=text):
+                legacy = re.sub(r"<", " <", text.lower().strip())
+                legacy = re.sub(r">", "> ", legacy)
+                expected = [term for term in re.split(r"[^\w/<>]+", legacy.strip()) if term]
+                tokens = list(RegexTokenizer()(text))
+                self.assertEqual([token.term for token in tokens], expected)
+                for token in tokens:
+                    self.assertEqual(text[token.start : token.stop].lower(), token.term)
+
+    def test_xml_regions_preserve_original_text_for_both_sources(self):
+        text = "<TITLE>Straße & FOX</TITLE><LINE>Hello!</LINE>"
+        for source in self.sources(text):
+            index = InvertedIndex(source)
+            regions = list(GCL(index).parse('"<title>".."</title>"'))
+            self.assertEqual(regions, [slice(0, 4)])
+            self.assertEqual(source.reader(index)[regions[0]], "<TITLE>Straße & FOX</TITLE>")
+            self.assertEqual(index.frequency("straße"), 1)
+            self.assertEqual(index.frequency("strasse"), 0)
+
+    def test_word_only_casefolding_remains_configurable(self):
+        tokenizer = RegexTokenizer(r"\w+", normalize=str.casefold)
+        self.assertEqual(
+            [token.term for token in tokenizer("<TAG>Straße</TAG>")], ["tag", "strasse", "tag"]
+        )
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
@@ -41,8 +75,8 @@ class TestTextSources(unittest.TestCase):
     def test_unicode_offsets_and_original_text(self):
         text = "  Café, Straße!\r\n猫 🐈 jumps.  "
         string, file = self.sources(text)
-        self.assertEqual(list(string), [("café", 2), ("strasse", 8), ("猫", 17), ("jumps", 21)])
-        self.assertEqual(list(file), [("café", 2), ("strasse", 9), ("猫", 19), ("jumps", 28)])
+        self.assertEqual(list(string), [("café", 2), ("straße", 8), ("猫", 17), ("jumps", 21)])
+        self.assertEqual(list(file), [("café", 2), ("straße", 9), ("猫", 19), ("jumps", 28)])
         for source in (string, file):
             reader = source.reader(InvertedIndex(source))
             self.assertEqual(reader[:], "Café, Straße!\r\n猫 🐈 jumps")

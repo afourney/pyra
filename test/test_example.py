@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,8 +30,11 @@ class TestExample(unittest.TestCase):
             )
         self.assertNotIn("Traceback", result.stdout)
         self.assertEqual(result.stderr, "")
-        matches = [line for line in result.stdout.splitlines() if line.startswith("slice(")]
+        self.assertIn("Example queries:", result.stdout)
+        self.assertIn("Return short play titles", result.stdout)
+        self.assertIn("? search terms", result.stdout)
+        matches = re.findall(r"\d+\. \[\d+:\d+\] ([^\n]+)", result.stdout)
         self.assertEqual(
             matches,
-            [("slice(239304,239313):\t<title> the tragedy of hamlet prince of denmark </title>")],
+            ["<TITLE>The Tragedy of Hamlet, Prince of Denmark</TITLE>"],
         )
