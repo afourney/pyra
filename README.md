@@ -85,7 +85,9 @@ queries are GCL expressions, returned in document order.
 Results display the original text with whitespace collapsed, numbered alongside
 exclusive-stop token ranges `[start:stop]`. Ranked results include up to eight
 surrounding tokens on each side for context; the range still identifies the
-match.
+match. In a color terminal, the matched slice has a yellow background, leaving
+the surrounding context unhighlighted. Redirected output stays plain; set
+`NO_COLOR=1` to disable highlighting in the terminal.
 
 ### Algebra and Query Language
 

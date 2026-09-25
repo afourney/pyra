@@ -1,6 +1,7 @@
 import contextlib
 import io
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -10,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from pyra import InvertedIndex, RegexTokenizer, StringTextSource
-from pyra.cli import _preview, _shorten, _show_results, main, run_shell
+from pyra.cli import _preview, _shorten, _show_results, _wrap_result, main, run_shell
 
 
 class TerminalOutput(io.StringIO):
@@ -19,6 +20,59 @@ class TerminalOutput(io.StringIO):
 
 
 class TestCLI(unittest.TestCase):
+    def test_highlight_marks_only_the_exact_slice(self):
+        self.assertEqual(
+            _preview(self.reader, slice(2, 4), 7, context=True, highlight=True),
+            "Before the \x1b[30;43mBROWN, Fox\x1b[0m jumps after lunch",
+        )
+        self.assertEqual(
+            _preview(self.reader, slice(2, 4), 7, context=False, highlight=True), "BROWN, Fox"
+        )
+
+    def test_highlight_tracks_repeated_text_and_original_xml(self):
+        source = StringTextSource("FOX <LINE>FOX,\n  FOX</LINE> FOX")
+        index = InvertedIndex(source)
+        self.assertEqual(
+            _preview(
+                source.reader(index), slice(2, 4), index.corpus_length, context=True, highlight=True
+            ),
+            "FOX <LINE>\x1b[30;43mFOX, FOX\x1b[0m</LINE> FOX",
+        )
+
+    def test_truncation_keeps_highlight_on_visible_parts_and_resets_it(self):
+        text = "prefix " + "matched " * 100 + "suffix"
+        colored = _shorten(text, slice(7, len(text) - 7))
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", colored)
+        self.assertEqual(plain, _shorten(text))
+        self.assertLessEqual(len(plain), 300)
+        self.assertTrue(colored.startswith("prefix \x1b[30;43m"))
+        self.assertIn("\x1b[0m … \x1b[30;43m", colored)
+        self.assertTrue(colored.endswith("\x1b[0m suffix"))
+
+    def test_wrapping_ignores_color_codes_and_resets_each_line(self):
+        plain = "1. [0:6] " + "matched " * 6
+        colored = "1. [0:6] \x1b[30;43m" + "matched " * 6 + "\x1b[0m"
+        lines = _wrap_result(colored, 20)
+        self.assertEqual(
+            [re.sub(r"\x1b\[[0-9;]*m", "", line) for line in lines],
+            _wrap_result(plain, 20),
+        )
+        for line in lines:
+            self.assertTrue(line.endswith("\x1b[0m"))
+
+    def test_highlight_is_disabled_for_redirected_output_and_no_color(self):
+        for terminal, env, expected in (
+            (True, {"TERM": "xterm"}, True),
+            (False, {"TERM": "xterm"}, False),
+            (True, {"TERM": "xterm", "NO_COLOR": "1"}, False),
+            (True, {"TERM": "dumb"}, False),
+        ):
+            with self.subTest(terminal=terminal, env=env):
+                output = TerminalOutput() if terminal else io.StringIO()
+                with contextlib.redirect_stdout(output), patch.dict(os.environ, env, clear=True):
+                    _show_results([slice(2, 4)], self.reader, 7, ranked=True)
+                self.assertEqual("\x1b[30;43m" in output.getvalue(), expected)
+
     def test_cli_uses_markup_and_lowercase_for_file_and_ranked_queries(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "notes.xml"
