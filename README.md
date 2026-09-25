@@ -69,7 +69,7 @@ Output:
 <pre>
 1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE><b>To be, or not</b> to be: that is the question:</LINE> <LINE>
 2. [258813:258817] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To <b>be, or not to</b> be: that is the question:</LINE> <LINE>Whether
-3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, <b>or not to be<b/>: that is the question:</LINE> <LINE>Whether 'tis
+3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, <b>or not to be</b>: that is the question:</LINE> <LINE>Whether 'tis
 4. [1254792:1254797] play on;</LINE> <LINE>Not like a corse; <b>or if, not to be</b> buried,</LINE> <LINE>But quick and in mine
 5. [81769:81772] </LINE> <LINE>If that I do not dream <b>or be not</b> frantic,--</LINE> <LINE>As I do trust I
 6. [258813:258816] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To <b>be, or not</b> to be: that is the question:</LINE> <LINE>
