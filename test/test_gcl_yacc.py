@@ -1,10 +1,30 @@
 # Load what we actually need to run the tests
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 
 from pyra.gcl_yacc import gcl_yacc_parse
 
 
 class TestGclLex(unittest.TestCase):
+    def test_errors_have_locations_and_do_not_recover_to_partial_queries(self):
+        for expr, offset, message in (
+            ('"word" +', 9, "Unexpected end"),
+            ('("word"', 8, "Unexpected end"),
+            ('"word" + + "other"', 10, "Unexpected token"),
+            ("unquoted", 1, "must be quoted"),
+            ('"unfinished', 1, "Unterminated"),
+            ("", 1, "Unexpected end"),
+        ):
+            with self.subTest(expr=expr), redirect_stdout(StringIO()) as output:
+                with self.assertRaises(SyntaxError) as caught:
+                    gcl_yacc_parse(expr)
+                self.assertIn(message, caught.exception.msg)
+                self.assertEqual(caught.exception.offset, offset)
+                self.assertEqual(caught.exception.text, expr)
+                self.assertEqual(output.getvalue(), "")
+                self.assertEqual(gcl_yacc_parse('"valid"'), ("Phrase", "valid"))
+
     def setUp(self):
         pass
 

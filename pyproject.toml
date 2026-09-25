@@ -21,6 +21,9 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 
+[project.scripts]
+pyra = "pyra.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/afourney/pyra"
 
@@ -103,3 +106,7 @@ stubPath = "typings"
 exclude = ["test", "**/__pycache__", ".venv"]
 typeCheckingMode = "strict"
 pythonVersion = "3.11"
+
+[tool.codespell]
+# Shakespeare uses this spelling in the README passage example.
+ignore-words-list = "corse"

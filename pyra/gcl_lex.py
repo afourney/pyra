@@ -85,7 +85,12 @@ t_ignore = " \t"
 # Handle errors.
 def t_error(t: lex.LexToken) -> NoReturn:
     """Raise a syntax error for an unrecognized token."""
-    raise SyntaxError(f"syntax error on line {t.lineno:d} near '{t.value}'")
+    message = (
+        "Unterminated quoted term"
+        if t.value[0] == '"'
+        else f"Unexpected character {t.value[0]!r}; search terms must be quoted"
+    )
+    raise SyntaxError(message, ("<query>", 1, t.lexpos + 1, None))
 
 
 # Build the lexer.
