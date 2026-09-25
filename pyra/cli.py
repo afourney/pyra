@@ -110,15 +110,14 @@ def _show_results(
         preview = _preview(reader, region, length, context=ranked)
         label = f"{number}. [{region.start}:{region.stop}] "
         lines = textwrap.wrap(label + preview, width=width, subsequent_indent="   ")
-        if interactive and page_count and used_lines + len(lines) + 1 > budget:
+        if interactive and page_count and used_lines + len(lines) > budget:
             if not _more():
                 return
             page_count = used_lines = 0
         print("\n".join(lines))
-        print()
         count += 1
         page_count += 1
-        used_lines += len(lines) + 1
+        used_lines += len(lines)
     if not count:
         print("No results.")
 

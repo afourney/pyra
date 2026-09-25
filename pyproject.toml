@@ -106,3 +106,7 @@ stubPath = "typings"
 exclude = ["test", "**/__pycache__", ".venv"]
 typeCheckingMode = "strict"
 pythonVersion = "3.11"
+
+[tool.codespell]
+# Shakespeare uses this spelling in the README passage example.
+ignore-words-list = "corse"

@@ -143,12 +143,13 @@ class TestCLI(unittest.TestCase):
         text, calls = self.display(10, [])
         self.assertIn("10. [9:10] word", text)
         self.assertNotIn("Space:", text)
+        self.assertNotIn("\n\n", text)
         self.assertEqual(calls, 0)
 
     def test_short_terminal_uses_smaller_pages(self):
         text, calls = self.display(10, ["x"], height=10)
-        self.assertIn("3. [2:3] word", text)
-        self.assertNotIn("4. [3:4]", text)
+        self.assertIn("6. [5:6] word", text)
+        self.assertNotIn("7. [6:7]", text)
         self.assertEqual(calls, 1)
 
     def test_redirected_output_never_reads_paging_keys(self):
