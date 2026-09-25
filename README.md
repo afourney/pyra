@@ -66,18 +66,16 @@ pyra> ? to be or not
 
 Output:
 
-```text
-1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>
-2. [258813:258817] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether
-3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether 'tis
-4. [1254792:1254797] play on;</LINE> <LINE>Not like a corse; or if, not to be buried,</LINE> <LINE>But quick and in mine
-5. [81769:81772] </LINE> <LINE>If that I do not dream or be not frantic,--</LINE> <LINE>As I do trust I
-6. [258813:258816] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>
-7. [1104261:1104264] GONZALO</SPEAKER> <LINE>Whether this be</LINE> <LINE>Or be not, I'll not swear.</LINE> </SPEECH> <SPEECH> <SPEAKER>
-8. [648327:648334] three ages since: but I think now 'tis not to be</LINE> <LINE>found; or, if it were, it would neither serve for
-9. [141750:141753] to stuff a botcher's</LINE> <LINE>cushion, or to be entombed in an ass's pack-</LINE> <LINE>
-10. [258812:258815] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE>
-```
+`1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>` **To be, or not** ` to be: that is the question:</LINE> <LINE>`
+`2. [258813:258817] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To ` **be, or not to** ` be: that is the question:</LINE> <LINE>Whether`
+`3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, ` **or not to be** `: that is the question:</LINE> <LINE>Whether 'tis`
+`4. [1254792:1254797] play on;</LINE> <LINE>Not like a corse; ` **or if, not to be** ` buried,</LINE> <LINE>But quick and in mine`
+`5. [81769:81772] </LINE> <LINE>If that I do not dream ` **or be not** ` frantic,--</LINE> <LINE>As I do trust I`
+`6. [258813:258816] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To ` **be, or not** ` to be: that is the question:</LINE> <LINE>`
+`7. [1104261:1104264] GONZALO</SPEAKER> <LINE>Whether this be</LINE> <LINE>` **Or be not** `, I'll not swear.</LINE> </SPEECH> <SPEECH> <SPEAKER>`
+`8. [648327:648334] three ages since: but I think now 'tis ` **not to be</LINE> <LINE>found; or,** `if it were, it would neither serve for`
+`9. [141750:141753] to stuff a botcher's</LINE> <LINE>cushion,` **or to be** `entombed in an ass's pack-</LINE> <LINE>`
+`10. [258812:258815] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>`**To be,** `or not to be: that is the question:</LINE>`
 
 Queries beginning with `? ` retrieve passages ranked by cover density; other
 queries are GCL expressions, returned in document order.
