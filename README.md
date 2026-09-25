@@ -67,7 +67,7 @@ pyra> ? to be or not
 Output:
 
 <pre>
-1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE><b>To be, or not</b> to be: that is the question:</LINE> <LINE>
+1. [258812:258816] Enter HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE><b><u>To be, or not</u></b> to be: that is the question:</LINE> <LINE>
 2. [258813:258817] HAMLET</STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether
 3. [258814:258818] </STAGEDIR> <SPEECH> <SPEAKER>HAMLET</SPEAKER> <LINE>To be, or not to be: that is the question:</LINE> <LINE>Whether 'tis
 4. [1254792:1254797] play on;</LINE> <LINE>Not like a corse; or if, not to be buried,</LINE> <LINE>But quick and in mine
